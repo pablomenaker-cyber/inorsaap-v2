@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import * as XLSX from "xlsx";
+// xlsx cargado via CDN en index.html
 
 const SUPA_URL = "https://tsuimfubvaapmatfotin.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzdWltZnVidmFhcG1hdGZvdGluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzODkxMzEsImV4cCI6MjA5NDk2NTEzMX0.r3DMVOx5UFZeu02Q6u3p5KhThHPT-Oa7fsJTOge3YX4";
@@ -91,6 +91,61 @@ const Spinner = ({ text = "Cargando..." }) => (
   </div>
 );
 
+// ── Notifications Bell ────────────────────────────────────────
+function NotificationsBell({ zones, users }) {
+  const [notifs, setNotifs] = useState([]);
+  const [open, setOpen] = useState(false);
+  const unread = notifs.filter(n => !n.leida).length;
+
+  useEffect(() => {
+    const load = () => db.get("notificaciones", "select=*&order=created_at.desc&limit=30").then(d => setNotifs(Array.isArray(d) ? d : []));
+    load();
+    const interval = setInterval(load, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const markRead = async (id) => {
+    await db.patch("notificaciones", `id=eq.${id}`, { leida: true });
+    setNotifs(p => p.map(n => n.id === id ? { ...n, leida: true } : n));
+  };
+  const markAllRead = async () => {
+    await Promise.all(notifs.filter(n => !n.leida).map(n => db.patch("notificaciones", `id=eq.${n.id}`, { leida: true })));
+    setNotifs(p => p.map(n => ({ ...n, leida: true })));
+  };
+
+  return (
+    <div style={{ position: "relative" }}>
+      <button onClick={() => setOpen(!open)} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: "#fff", fontSize: 18, position: "relative" }}>
+        🔔
+        {unread > 0 && <span style={{ position: "absolute", top: -4, right: -4, background: "#dc2626", color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: 20, padding: "1px 5px", minWidth: 16, textAlign: "center" }}>{unread}</span>}
+      </button>
+      {open && (
+        <div style={{ position: "absolute", right: 0, top: 44, width: 320, background: "#fff", borderRadius: 14, boxShadow: "0 8px 32px rgba(0,0,0,0.18)", zIndex: 1000, overflow: "hidden" }}>
+          <div style={{ padding: "12px 16px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontWeight: 700, color: BRAND, fontSize: 15 }}>Notificaciones</span>
+            {unread > 0 && <button onClick={markAllRead} style={{ background: "none", border: "none", cursor: "pointer", color: BRAND, fontSize: 12, fontWeight: 600 }}>Marcar todas leídas</button>}
+          </div>
+          <div style={{ maxHeight: 380, overflowY: "auto" }}>
+            {notifs.length === 0
+              ? <div style={{ padding: 24, textAlign: "center", color: "#94a3b8", fontSize: 14 }}>Sin notificaciones</div>
+              : notifs.map(n => (
+                <div key={n.id} onClick={() => markRead(n.id)} style={{ padding: "12px 16px", borderBottom: "1px solid #f8fafc", cursor: "pointer", background: n.leida ? "#fff" : "#f0f7ff", display: "flex", gap: 10, alignItems: "flex-start" }}>
+                  <span style={{ fontSize: 20, flexShrink: 0 }}>📦</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: n.leida ? 400 : 700, color: BRAND, fontSize: 13 }}>{n.titulo}</div>
+                    <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>{n.mensaje}</div>
+                    <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 4 }}>{new Date(n.created_at).toLocaleString("es-MX")}</div>
+                  </div>
+                  {!n.leida && <div style={{ width: 8, height: 8, borderRadius: "50%", background: BRAND, flexShrink: 0, marginTop: 4 }} />}
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Signature Pad ──────────────────────────────────────────────
 function SignaturePad({ onSave }) {
   const ref = useRef(null); const drawing = useRef(false);
@@ -112,6 +167,8 @@ function SignaturePad({ onSave }) {
 
 // ── Excel Export ───────────────────────────────────────────────
 function exportExcel(entregas, fecha) {
+  const XLSX = window.XLSX;
+  if (!XLSX) { alert("Error cargando librería Excel. Recarga la página."); return; }
   const hoy = fecha || new Date().toLocaleDateString("es-MX");
   const rows = entregas.filter(e => e.fecha === hoy).map(e => ({
     "Fecha": e.fecha,
@@ -140,7 +197,7 @@ function Login({ onLogin }) {
   const [users, setUsers] = useState([]);
   const [uid, setUid] = useState(""); const [pass, setPass] = useState(""); const [err, setErr] = useState(""); const [loading, setLoading] = useState(true);
   useEffect(() => { db.get("users", "select=*&order=name").then(d => { setUsers(Array.isArray(d) ? d : []); setLoading(false); }); }, []);
-  const login = () => { const u = users.find(u => String(u.id) === String(uid)); if (u && u.password === pass) { setErr(""); onLogin(u); } else setErr("Usuario o contraseña incorrectos"); };
+  const login = () => { const u = users.find(u => u.id === uid); if (u && u.password === pass) { setErr(""); onLogin(u); } else setErr("Usuario o contraseña incorrectos"); };
   return (
     <div style={{ minHeight: "100vh", background: `linear-gradient(135deg,#1a3d5c,${BRAND})`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div style={{ background: "#fff", borderRadius: 20, padding: "36px 28px", width: "100%", maxWidth: 360, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
@@ -233,6 +290,12 @@ function NewDelivery({ driver, origins, destinations, unit, onSave, onCancel }) 
       if (form.firma) firma_url = await db.upload("inorsapp", `firmas/${driver.id}_${ts}.png`, form.firma, "image/png");
     const entrega = { driver_id: String(driver.id), driver_name: driver.name, driver_zone: driver.zone || "", unit_placas: unit?.placas || "", unit_acoplado: unit?.acoplado_placas || "", remision: form.remision, cliente: form.cliente, origen: form.origen, destino: form.destino, hora: form.hora, fecha: new Date().toLocaleDateString("es-MX"), foto_url, firma_url };
       await db.post("entregas", entrega);
+      await db.post("notificaciones", {
+        titulo: `Nueva entrega — ${driver.name}`,
+        mensaje: `Rem. ${form.remision} · ${form.origen} → ${form.destino} · Cliente: ${form.cliente} · ${form.hora}`,
+        entrega_id: entrega.id,
+        leida: false
+      });
       onSave(entrega);
     } catch (e) { alert("Error al guardar. Verifica tu conexión."); setSaving(false); }
   };
@@ -612,6 +675,7 @@ function BackofficeShell({ user, users, setUsers, zones, setZones, onLogout }) {
       <div style={{ background: BRAND, padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <InorsaLogo height={28} white />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <NotificationsBell />
           <span style={{ background: "rgba(255,255,255,0.2)", color: "#fff", fontSize: 11, borderRadius: 20, padding: "2px 10px", fontWeight: 600 }}>{user.role === "admin" ? "Admin" : "Visor"}</span>
           <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 13 }}>{user.name}</span>
           <button onClick={onLogout} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: "#fff", fontSize: 13 }}>Salir</button>
