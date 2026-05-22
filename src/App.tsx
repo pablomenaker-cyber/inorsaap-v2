@@ -600,7 +600,7 @@ function UnitsPanel({ users }) {
       {showForm && <UnitForm fo={form} fn={f} choferes={choferes} err={err} onCancel={() => { setShowForm(false); setErr(""); }} onSave={addUnit} saveLabel="✓ Registrar" />}
       {loading ? <Spinner /> : units.length === 0 ? <div style={{ ...s.card, textAlign: "center", color: "#94a3b8", fontSize: 14 }}>No hay unidades registradas</div>
         : units.map(unit => {
-          const chofer = choferes.find(c => String(c.id) === String(unit.driver_id)); = choferes.find(c => String(c.id) === String(unit.driver_id)); c.id === unit.driver_id);
+          const chofer = choferes.find(c => String(c.id) === String(unit.driver_id));
           return editing === unit.id && editForm
             ? <UnitForm key={unit.id} fo={editForm} fn={ef} choferes={choferes} err={err} onCancel={() => { setEditing(null); setEditForm(null); }} onSave={() => saveEdit(unit.id)} saveLabel="✓ Guardar cambios" />
             : (
