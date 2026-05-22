@@ -498,14 +498,17 @@ function DeliveriesPanel({ zones, users }) {
                         <button onClick={() => handleDelete(e.id)} style={{ ...btn("red"), flex: "none", padding: "6px 14px", fontSize: 12 }}>Confirmar</button>
                         <button onClick={() => setConfirmDel(null)} style={{ ...btn("gray"), flex: "none", padding: "6px 14px", fontSize: 12 }}>Cancelar</button>
                       </div>
-                    : <button onClick={() => setConfirmDel(e.id)} style={{ background: "none", border: "1.5px solid #fecaca", borderRadius: 8, padding: "5px 12px", cursor: "pointer", color: "#dc2626", fontSize: 12, fontWeight: 600 }}>Eliminar</button>
+               : <button onClick={() => setConfirmDel(e.id)} style={{ background: "none", border: "1.5px solid #fecaca", borderRadius: 8, padding: "5px 12px", cursor: "pointer", color: "#dc2626", fontSize: 12, fontWeight: 600 }}>Eliminar</button>
                   }
                 </div>
               </div>
             ))}
           </div>
         ))
-}}
+      }
+    </div>
+  );
+}
 
 // ── Generic Catalog Panel ──────────────────────────────────────
 function CatalogPanel({ title, icon, table, placeholder, hint }) {
