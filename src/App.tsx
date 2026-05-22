@@ -5,7 +5,6 @@ const SUPA_URL = "https://tsuimfubvaapmatfotin.supabase.co";
 const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzdWltZnVidmFhcG1hdGZvdGluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzODkxMzEsImV4cCI6MjA5NDk2NTEzMX0.r3DMVOx5UFZeu02Q6u3p5KhThHPT-Oa7fsJTOge3YX4";
 const HEADERS = { "Content-Type": "application/json", apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` };
 
-// ── Supabase helpers ───────────────────────────────────────────
 const db = {
   get: async (table, params = "") => {
     const r = await fetch(`${SUPA_URL}/rest/v1/${table}?${params}`, { headers: HEADERS });
@@ -25,17 +24,16 @@ const db = {
   upload: async (bucket, path, base64, mime) => {
     const blob = await fetch(base64).then(r => r.blob());
     const r = await fetch(`${SUPA_URL}/storage/v1/object/${bucket}/${path}`, { method: "POST", headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}`, "Content-Type": mime }, body: blob });
-    const data = await r.json();
+    await r.json();
     return `${SUPA_URL}/storage/v1/object/public/${bucket}/${path}`;
   }
 };
 
-// ── Brand / Styles ─────────────────────────────────────────────
 const BRAND = "#3b82f6";
 const DARK = "#0f172a";
 const CYAN = "#06b6d4";
 const SUCCESS = "#10b981";
-const WARNING = "#f59e0b";
+
 const s = {
   card: { background: "#fff", borderRadius: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", padding: "18px 16px", marginBottom: 12, border: "0.5px solid #e2e8f0" },
   input: { width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #e2e8f0", fontSize: 15, boxSizing: "border-box", background: "#f8fafc", outline: "none" },
@@ -43,7 +41,7 @@ const s = {
 };
 const btn = (color = "brand", extra = {}) => ({
   flex: 1, padding: "11px 0", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14,
-  background: color === "brand" ? BRAND : color === "green" ? SUCCESS : color === "red" ? "#ef4444" : color === "blue" ? BRAND : color === "dark" ? DARK : color === "cyan" ? CYAN : "#f1f5f9",
+  background: color === "brand" ? BRAND : color === "green" ? SUCCESS : color === "red" ? "#ef4444" : color === "dark" ? DARK : color === "cyan" ? CYAN : "#f1f5f9",
   color: color === "gray" ? "#374151" : "#fff", letterSpacing: "0.2px", ...extra
 });
 
@@ -86,7 +84,6 @@ const UnitCard = ({ unit, style = {} }) => {
   );
 };
 
-// ── Spinner ────────────────────────────────────────────────────
 const Spinner = ({ text = "Cargando..." }) => (
   <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", gap: 16 }}>
     <div style={{ width: 40, height: 40, border: `4px solid #e2e8f0`, borderTop: `4px solid ${BRAND}`, borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
@@ -95,8 +92,7 @@ const Spinner = ({ text = "Cargando..." }) => (
   </div>
 );
 
-// ── Notifications Bell ────────────────────────────────────────
-function NotificationsBell({ zones, users }) {
+function NotificationsBell() {
   const [notifs, setNotifs] = useState([]);
   const [open, setOpen] = useState(false);
   const unread = notifs.filter(n => !n.leida).length;
@@ -150,7 +146,6 @@ function NotificationsBell({ zones, users }) {
   );
 }
 
-// ── Signature Pad ──────────────────────────────────────────────
 function SignaturePad({ onSave }) {
   const ref = useRef(null); const drawing = useRef(false);
   const pos = (e, c) => { const r = c.getBoundingClientRect(), src = e.touches ? e.touches[0] : e; return { x: src.clientX - r.left, y: src.clientY - r.top }; };
@@ -169,36 +164,25 @@ function SignaturePad({ onSave }) {
   );
 }
 
-// ── Excel Export ───────────────────────────────────────────────
 function exportExcel(entregas, fecha) {
   const XLSX = window.XLSX;
   if (!XLSX) { alert("Error cargando librería Excel. Recarga la página."); return; }
   const hoy = fecha || new Date().toLocaleDateString("es-MX");
   const rows = entregas.filter(e => e.fecha === hoy).map(e => ({
-    "Fecha": e.fecha,
-    "Hora": e.hora,
-    "Chofer": e.driver_name,
-    "Zona": e.driver_zone || "—",
-    "Unidad": e.unit_placas || "—",
-    "Acoplado": e.unit_acoplado || "—",
-    "Folio": e.folio || "—",
-    "No. Remisión": e.remision,
-    "Producto": e.producto || "—",
-    "Cliente": e.destino,
-    "Origen": e.origen,
-    "Destino": e.destino,
-    "Foto": e.foto_url ? "✓" : "—",
-    "Firma": e.firma_url ? "✓" : "—",
+    "Fecha": e.fecha, "Hora": e.hora, "Chofer": e.driver_name, "Zona": e.driver_zone || "—",
+    "Unidad": e.unit_placas || "—", "Acoplado": e.unit_acoplado || "—",
+    "Folio": e.folio || "—", "No. Remisión": e.remision, "Producto": e.producto || "—",
+    "Destino": e.destino, "Origen": e.origen,
+    "Foto": e.foto_url ? "✓" : "—", "Firma": e.firma_url ? "✓" : "—",
   }));
   if (rows.length === 0) { alert("No hay entregas para la fecha seleccionada."); return; }
   const ws = XLSX.utils.json_to_sheet(rows);
-  ws["!cols"] = [10,8,22,20,12,12,16,24,22,22,6,6].map(w => ({ wch: w }));
+  ws["!cols"] = [10,8,22,20,12,12,12,16,22,22,22,6,6].map(w => ({ wch: w }));
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Entregas");
   XLSX.writeFile(wb, `Inorsapp_Entregas_${hoy.replace(/\//g,"-")}.xlsx`);
 }
 
-// ── Login ──────────────────────────────────────────────────────
 function Login({ onLogin }) {
   const [users, setUsers] = useState([]);
   const [uid, setUid] = useState(""); const [pass, setPass] = useState(""); const [err, setErr] = useState(""); const [loading, setLoading] = useState(true);
@@ -224,14 +208,13 @@ function Login({ onLogin }) {
             <input style={s.input} type="password" placeholder="Contraseña" value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === "Enter" && login()} />
           </div>
           {err && <p style={{ color: "#dc2626", fontSize: 13, margin: "0 0 12px" }}>{err}</p>}
-          <button onClick={login} style={{ ...btn("brand"), width: "100%", padding: "12px 0", fontSize: 16, borderRadius: 10 }}>Ingresar</button>
+          <button onClick={login} style={{ ...btn("brand"), width: "100%", padding: "13px 0", fontSize: 15, borderRadius: 12 }}>Ingresar</button>
         </>}
       </div>
     </div>
   );
 }
 
-// ── Driver Home ────────────────────────────────────────────────
 function DriverHome({ driver, zones, unit, onNew, onLogout }) {
   const [entregas, setEntregas] = useState([]); const [loading, setLoading] = useState(true);
   const hoy = new Date().toLocaleDateString("es-MX");
@@ -264,12 +247,13 @@ function DriverHome({ driver, zones, unit, onNew, onLogout }) {
           : hoyList.map(e => (
             <div key={e.id} style={s.card}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                <span style={{ fontWeight: 700, color: BRAND }}>Rem. {e.remision}</span>
+                <span style={{ fontWeight: 700, color: BRAND }}>{e.folio || `Rem. ${e.remision}`}</span>
                 <span style={{ background: "#dcfce7", color: "#166534", fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "2px 10px" }}>✓</span>
               </div>
               <div style={{ fontSize: 13, color: "#475569" }}><b>Origen:</b> {e.origen}</div>
               <div style={{ fontSize: 13, color: "#475569" }}><b>Destino:</b> {e.destino}</div>
-              <div style={{ fontSize: 13, color: "#475569" }}><b>Cliente:</b> {e.cliente} · {e.hora}</div>
+              {e.producto && <div style={{ fontSize: 13, color: "#475569" }}><b>Producto:</b> {e.producto}</div>}
+              <div style={{ fontSize: 13, color: "#475569" }}><b>Rem:</b> {e.remision} · {e.hora}</div>
             </div>
           ))}
       </>}
@@ -277,7 +261,6 @@ function DriverHome({ driver, zones, unit, onNew, onLogout }) {
   );
 }
 
-// ── New Delivery ───────────────────────────────────────────────
 function NewDelivery({ driver, origins, destinations, products, unit, onSave, onCancel }) {
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({ origen: "", destino: "", producto: "", remision: "", folio: "", hora: new Date().toTimeString().slice(0, 5), foto: null, firma: null });
@@ -289,9 +272,7 @@ function NewDelivery({ driver, origins, destinations, products, unit, onSave, on
 
   useEffect(() => {
     fetch(`${SUPA_URL}/rest/v1/rpc/get_next_folio`, {
-      method: "POST",
-      headers: { ...HEADERS, "Content-Type": "application/json" },
-      body: JSON.stringify({})
+      method: "POST", headers: { ...HEADERS, "Content-Type": "application/json" }, body: JSON.stringify({})
     }).then(r => r.json()).then(num => {
       const folio = `IN-26-${String(num).padStart(5, "0")}`;
       set("folio", folio);
@@ -305,20 +286,15 @@ function NewDelivery({ driver, origins, destinations, products, unit, onSave, on
       let foto_url = null, firma_url = null;
       if (form.foto) foto_url = await db.upload("inorsapp", `fotos/${driver.id}_${ts}.jpg`, form.foto, "image/jpeg");
       if (form.firma) firma_url = await db.upload("inorsapp", `firmas/${driver.id}_${ts}.png`, form.firma, "image/png");
-          const entrega = { driver_id: String(driver.id), driver_name: driver.name, driver_zone: driver.zone || "", unit_placas: unit?.placas || "", unit_acoplado: unit?.acoplado_placas || "", remision: form.remision, cliente: form.cliente, origen: form.origen, destino: form.destino, producto: form.producto, hora: form.hora, fecha: new Date().toLocaleDateString("es-MX"), foto_url, firma_url };
+      const entrega = { id: ts.toString(), driver_id: String(driver.id), driver_name: driver.name, driver_zone: driver.zone || "", unit_placas: unit?.placas || "", unit_acoplado: unit?.acoplado_placas || "", folio: form.folio, remision: form.remision, cliente: form.destino, origen: form.origen, destino: form.destino, producto: form.producto, hora: form.hora, fecha: new Date().toLocaleDateString("es-MX"), foto_url, firma_url };
       await db.post("entregas", entrega);
-      await db.post("notificaciones", {
-        titulo: `Nueva entrega — ${driver.name}`,
-        mensaje: `Rem. ${form.remision} · ${form.origen} → ${form.destino} · Cliente: ${form.cliente} · ${form.hora}`,
-        entrega_id: entrega.id,
-        leida: false
-      });
+      await db.post("notificaciones", { titulo: `Nueva entrega — ${driver.name}`, mensaje: `${form.folio} · ${form.origen} → ${form.destino} · ${form.producto} · ${form.hora}`, leida: false });
       onSave(entrega);
     } catch (e) { alert("Error al guardar. Verifica tu conexión."); setSaving(false); }
   };
 
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", padding: "16px 12px" }}>
+    <div style={{ maxWidth: 480, margin: "0 auto", padding: "16px 12px", background: "#f8fafc", minHeight: "100vh" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
         <button onClick={onCancel} style={{ background: "none", border: "none", cursor: "pointer", color: BRAND, fontSize: 22 }}>←</button>
         <InorsaLogo height={24} />
@@ -334,19 +310,20 @@ function NewDelivery({ driver, origins, destinations, products, unit, onSave, on
       </div>
       {step === 1 && (
         <div style={s.card}>
-          <h3 style={{ margin: "0 0 16px", color: BRAND }}>¿De dónde a dónde?</h3>
+          <h3 style={{ margin: "0 0 16px", color: DARK }}>¿De dónde a dónde?</h3>
           <div style={{ marginBottom: 14 }}><label style={s.label}>⛏️ Origen</label><select style={s.input} value={form.origen} onChange={e => set("origen", e.target.value)}><option value="">Seleccionar...</option>{origins.map(o => <option key={o.id} value={o.name}>{o.name}</option>)}</select></div>
-          <div style={{ marginBottom: 18 }}><label style={s.label}>🏁 Destino</label><select style={s.input} value={form.destino} onChange={e => set("destino", e.target.value)}><option value="">Seleccionar...</option>{destinations.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}</select></div>
-          <button disabled={!form.origen || !form.destino} onClick={() => setStep(2)} style={{ ...btn("brand"), width: "100%", opacity: (!form.origen || !form.destino) ? 0.5 : 1 }}>Siguiente →</button>
+          <div style={{ marginBottom: 14 }}><label style={s.label}>🏁 Destino</label><select style={s.input} value={form.destino} onChange={e => set("destino", e.target.value)}><option value="">Seleccionar...</option>{destinations.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}</select></div>
+          <div style={{ marginBottom: 18 }}><label style={s.label}>📦 Producto</label><select style={s.input} value={form.producto} onChange={e => set("producto", e.target.value)}><option value="">Seleccionar producto...</option>{products.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}</select></div>
+          <button disabled={!form.origen || !form.destino || !form.producto} onClick={() => setStep(2)} style={{ ...btn("brand"), width: "100%", opacity: (!form.origen || !form.destino || !form.producto) ? 0.5 : 1 }}>Siguiente →</button>
         </div>
       )}
       {step === 2 && (
         <div style={s.card}>
-          <h3 style={{ margin: "0 0 4px", color: BRAND }}>Datos de la entrega</h3>
-          <div style={{ fontSize: 12, color: "#64748b", marginBottom: 14, padding: "6px 10px", background: "#f8fafc", borderRadius: 8 }}>{form.origen} → {form.destino} · {form.producto}</div>
+          <h3 style={{ margin: "0 0 4px", color: DARK }}>Datos de la entrega</h3>
+          <div style={{ fontSize: 12, color: "#64748b", marginBottom: 14, padding: "8px 12px", background: "#f1f5f9", borderRadius: 8 }}>{form.origen} → {form.destino} · {form.producto}</div>
           <div style={{ marginBottom: 12 }}>
             <label style={s.label}>Folio Inorsapp</label>
-            <div style={{ ...s.input, background: "#f1f5f9", color: BRAND, fontWeight: 700, fontSize: 16, letterSpacing: "1px" }}>{form.folio || "Generando..."}</div>
+            <div style={{ ...s.input, background: "#eff6ff", color: BRAND, fontWeight: 700, fontSize: 16, letterSpacing: "1px", cursor: "default" }}>{form.folio || "Generando..."}</div>
           </div>
           <div style={{ marginBottom: 12 }}><label style={s.label}>Número de remisión</label><input style={s.input} placeholder="Número del banco/mina" value={form.remision} onChange={e => set("remision", e.target.value)} /></div>
           <div style={{ marginBottom: 16 }}><label style={s.label}>Hora de entrega</label><input style={s.input} type="time" value={form.hora} onChange={e => set("hora", e.target.value)} /></div>
@@ -355,7 +332,7 @@ function NewDelivery({ driver, origins, destinations, products, unit, onSave, on
       )}
       {step === 3 && (
         <div style={s.card}>
-          <h3 style={{ margin: "0 0 16px", color: BRAND }}>Foto de la remisión</h3>
+          <h3 style={{ margin: "0 0 16px", color: DARK }}>Foto de la remisión</h3>
           <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{ display: "none" }} />
           {!form.foto ? <div onClick={() => fileRef.current.click()} style={{ border: `2px dashed ${BRAND}`, borderRadius: 12, padding: "40px 20px", textAlign: "center", cursor: "pointer", color: BRAND, opacity: .7 }}><div style={{ fontSize: 36, marginBottom: 8 }}>📷</div><div style={{ fontWeight: 600 }}>Toca para tomar foto</div></div>
             : <div style={{ position: "relative" }}><img src={form.foto} alt="rem" style={{ width: "100%", borderRadius: 10, maxHeight: 220, objectFit: "cover" }} /><button onClick={() => set("foto", null)} style={{ position: "absolute", top: 8, right: 8, background: "#dc2626", color: "#fff", border: "none", borderRadius: 20, padding: "4px 10px", cursor: "pointer", fontSize: 12 }}>Retomar</button></div>}
@@ -364,9 +341,9 @@ function NewDelivery({ driver, origins, destinations, products, unit, onSave, on
       )}
       {step === 4 && (
         <div style={s.card}>
-          <h3 style={{ margin: "0 0 16px", color: BRAND }}>Firma del chofer</h3>
+          <h3 style={{ margin: "0 0 16px", color: DARK }}>Firma del chofer</h3>
           <SignaturePad onSave={sig => { set("firma", sig); setSigned(true); }} />
-          {signed && <p style={{ color: "#16a34a", fontSize: 13, marginTop: 8, fontWeight: 600 }}>✓ Firma guardada</p>}
+          {signed && <p style={{ color: SUCCESS, fontSize: 13, marginTop: 8, fontWeight: 600 }}>✓ Firma guardada</p>}
           <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
             <button onClick={() => setStep(3)} style={btn("gray")}>← Atrás</button>
             <button disabled={!signed || saving} onClick={handleSave} style={{ ...btn("green"), opacity: (!signed || saving) ? 0.5 : 1 }}>{saving ? "Guardando..." : "✓ Guardar entrega"}</button>
@@ -377,54 +354,82 @@ function NewDelivery({ driver, origins, destinations, products, unit, onSave, on
   );
 }
 
-// ── Delivery Detail ────────────────────────────────────────────
-function DeliveryDetail({ e, zones, onBack }) {
+function DeliveryDetail({ e, zones, onBack, onDelete, isAdmin }) {
+  const [confirmDel, setConfirmDel] = useState(false);
   return (
     <div style={{ maxWidth: 600, margin: "0 auto", padding: "16px 12px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
         <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", color: BRAND, fontSize: 22 }}>←</button>
-        <h2 style={{ margin: 0, color: BRAND, fontSize: 18 }}>Detalle de entrega</h2>
+        <h2 style={{ margin: 0, color: DARK, fontSize: 18, flex: 1 }}>Detalle de entrega</h2>
+        {isAdmin && (confirmDel
+          ? <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => onDelete(e.id)} style={{ ...btn("red"), flex: "none", padding: "7px 14px", fontSize: 13 }}>Confirmar</button>
+              <button onClick={() => setConfirmDel(false)} style={{ ...btn("gray"), flex: "none", padding: "7px 14px", fontSize: 13 }}>Cancelar</button>
+            </div>
+          : <button onClick={() => setConfirmDel(true)} style={{ background: "none", border: "1.5px solid #fecaca", borderRadius: 10, padding: "7px 14px", cursor: "pointer", color: "#dc2626", fontSize: 13, fontWeight: 600 }}>Eliminar</button>
+        )}
       </div>
       <div style={s.card}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-          <span style={{ fontWeight: 700, color: BRAND, fontSize: 16 }}>Rem. {e.remision}</span>
+          <span style={{ fontWeight: 700, color: BRAND, fontSize: 16 }}>{e.folio || `Rem. ${e.remision}`}</span>
           <span style={{ background: "#dcfce7", color: "#166534", fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "2px 10px" }}>✓ Completado</span>
         </div>
         {e.driver_zone && <div style={{ marginBottom: 10 }}><ZonePill zone={e.driver_zone} zones={zones} /></div>}
         {[["Folio", e.folio || "—"], ["Chofer", e.driver_name], ["Unidad", e.unit_placas || "—"], ["Acoplado", e.unit_acoplado || "—"], ["Fecha", e.fecha], ["Hora", e.hora], ["Producto", e.producto || "—"], ["Origen", e.origen], ["Destino", e.destino], ["Remisión", e.remision]].map(([k, v]) => (
           <div key={k} style={{ display: "flex", gap: 8, borderBottom: "1px solid #f1f5f9", padding: "7px 0", fontSize: 14 }}>
             <span style={{ color: "#64748b", minWidth: 70 }}>{k}</span>
-            <span style={{ color: BRAND, fontWeight: 500 }}>{v}</span>
+            <span style={{ color: DARK, fontWeight: 500 }}>{v}</span>
           </div>
         ))}
       </div>
-      {e.foto_url && <div style={s.card}><div style={{ fontWeight: 600, color: BRAND, marginBottom: 10 }}>📷 Foto de remisión</div><img src={e.foto_url} alt="rem" style={{ width: "100%", borderRadius: 10, maxHeight: 300, objectFit: "cover" }} /></div>}
-      {e.firma_url && <div style={s.card}><div style={{ fontWeight: 600, color: BRAND, marginBottom: 10 }}>✍️ Firma del chofer</div><img src={e.firma_url} alt="firma" style={{ width: "100%", borderRadius: 8, maxHeight: 130, background: "#f8fafc", objectFit: "contain" }} /></div>}
+      {e.foto_url && (
+        <div style={s.card}>
+          <div style={{ fontWeight: 600, color: DARK, marginBottom: 10 }}>📷 Foto de remisión</div>
+          <img src={e.foto_url} alt="rem" style={{ width: "100%", borderRadius: 10, maxHeight: 300, objectFit: "cover" }} />
+          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+            <a href={e.foto_url} download={`foto_${e.folio||e.remision}.jpg`} style={{ ...btn("brand"), flex: 1, textAlign: "center", textDecoration: "none", padding: "9px 0", fontSize: 13 }}>⬇ Descargar</a>
+            <a href={`https://wa.me/?text=${encodeURIComponent(`Entrega ${e.folio||e.remision} - ${e.origen} → ${e.destino} - ${e.producto||""}\nFoto: ${e.foto_url}`)}`} target="_blank" rel="noopener noreferrer" style={{ ...btn("green"), flex: 1, textAlign: "center", textDecoration: "none", padding: "9px 0", fontSize: 13 }}>📲 WhatsApp</a>
+          </div>
+        </div>
+      )}
+      {e.firma_url && (
+        <div style={s.card}>
+          <div style={{ fontWeight: 600, color: DARK, marginBottom: 10 }}>✍️ Firma del chofer</div>
+          <img src={e.firma_url} alt="firma" style={{ width: "100%", borderRadius: 8, maxHeight: 130, background: "#f8fafc", objectFit: "contain" }} />
+          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+            <a href={e.firma_url} download={`firma_${e.folio||e.remision}.png`} style={{ ...btn("brand"), flex: 1, textAlign: "center", textDecoration: "none", padding: "9px 0", fontSize: 13 }}>⬇ Descargar firma</a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// ── Deliveries Panel ───────────────────────────────────────────
 function DeliveriesPanel({ zones, users }) {
   const [entregas, setEntregas] = useState([]); const [loading, setLoading] = useState(true);
   const [sel, setSel] = useState(null);
-  const [filtZone, setFiltZone] = useState(""); const [filtDriver, setFiltDriver] = useState(""); const [filtDate, setFiltDate] = useState("");
+  const [filtZone, setFiltZone] = useState(""); const [filtDriver, setFiltDriver] = useState(""); const [filtDate, setFiltDate] = useState(""); const [filtDestino, setFiltDestino] = useState("");
   const [excelDate, setExcelDate] = useState("");
+  const [confirmDel, setConfirmDel] = useState(null);
   const hoy = new Date().toLocaleDateString("es-MX");
   const choferes = users.filter(u => u.role === "chofer");
-  const [confirmDel, setConfirmDel] = useState(null);
+
   const handleDelete = async (id) => {
     await db.del("entregas", `id=eq.${id}`);
     setEntregas(p => p.filter(e => e.id !== id));
     setConfirmDel(null);
+    setSel(null);
   };
 
   useEffect(() => { db.get("entregas", "select=*&order=created_at.desc").then(d => { setEntregas(Array.isArray(d) ? d : []); setLoading(false); }); }, []);
 
- if (sel) return <DeliveryDetail e={sel} zones={zones} onBack={() => setSel(null)} onDelete={handleDelete} isAdmin={true} />;
-  const filtered = entregas.filter(e => (!filtZone || e.driver_zone === filtZone) && (!filtDriver || e.driver_id === filtDriver) && (!filtDate || e.fecha === filtDate));
+  if (sel) return <DeliveryDetail e={sel} zones={zones} onBack={() => setSel(null)} onDelete={handleDelete} isAdmin={true} />;
+
+  const filtered = entregas.filter(e => (!filtZone || e.driver_zone === filtZone) && (!filtDriver || e.driver_id === filtDriver) && (!filtDate || e.fecha === filtDate) && (!filtDestino || e.destino === filtDestino));
+  const destinos = [...new Set(entregas.map(e => e.destino).filter(Boolean))].sort();
   const zoneSummary = zones.reduce((acc, z) => { acc[z] = entregas.filter(e => e.driver_zone === z && e.fecha === hoy).length; return acc; }, {});
-const groupedByDate = filtered.reduce((acc, e) => {
+
+  const groupedByDate = filtered.reduce((acc, e) => {
     const fecha = e.fecha || "Sin fecha";
     if (!acc[fecha]) acc[fecha] = [];
     acc[fecha].push(e);
@@ -434,39 +439,35 @@ const groupedByDate = filtered.reduce((acc, e) => {
     const parse = d => { const [dd,mm,yyyy] = d.split("/"); return new Date(`${yyyy}-${mm}-${dd}`); };
     return parse(b) - parse(a);
   });
+
   return (
     <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 12px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <h3 style={{ margin: 0, color: BRAND, fontSize: 17 }}>Entregas en tiempo real</h3>
-        <button onClick={() => loading || setLoading(true) || db.get("entregas","select=*&order=created_at.desc").then(d=>{setEntregas(Array.isArray(d)?d:[]);setLoading(false);})} style={{ background: "none", border: `1.5px solid ${BRAND}`, borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: BRAND, fontSize: 13 }}>↻ Actualizar</button>
+        <h3 style={{ margin: 0, color: DARK, fontSize: 17 }}>Entregas en tiempo real</h3>
+        <button onClick={() => { setLoading(true); db.get("entregas","select=*&order=created_at.desc").then(d=>{setEntregas(Array.isArray(d)?d:[]);setLoading(false);}); }} style={{ background: "none", border: `1.5px solid ${BRAND}`, borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: BRAND, fontSize: 13 }}>↻ Actualizar</button>
       </div>
-
-      {/* Zone cards */}
       <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 16 }}>
-        <div onClick={() => setFiltZone("")} style={{ ...s.card, marginBottom: 0, minWidth: 110, cursor: "pointer", textAlign: "center", border: filtZone === "" ? `2px solid ${BRAND}` : "2px solid transparent", flexShrink: 0 }}>
+        <div onClick={() => setFiltZone("")} style={{ ...s.card, marginBottom: 0, minWidth: 110, cursor: "pointer", textAlign: "center", border: filtZone === "" ? `2px solid ${BRAND}` : "0.5px solid #e2e8f0", flexShrink: 0 }}>
           <div style={{ fontSize: 20, fontWeight: 700, color: BRAND }}>{entregas.filter(e => e.fecha === hoy).length}</div>
           <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>Todas</div>
         </div>
         {zones.filter(z => choferes.some(c => c.zone === z)).map(z => {
           const [bg, color] = zoneColor(z, zones);
           return (
-            <div key={z} onClick={() => setFiltZone(filtZone === z ? "" : z)} style={{ ...s.card, marginBottom: 0, minWidth: 120, cursor: "pointer", textAlign: "center", border: filtZone === z ? "2px solid " + color : "2px solid transparent", background: filtZone === z ? bg : "#fff", flexShrink: 0 }}>
+            <div key={z} onClick={() => setFiltZone(filtZone === z ? "" : z)} style={{ ...s.card, marginBottom: 0, minWidth: 120, cursor: "pointer", textAlign: "center", border: filtZone === z ? "2px solid " + color : "0.5px solid #e2e8f0", background: filtZone === z ? bg : "#fff", flexShrink: 0 }}>
               <div style={{ fontSize: 20, fontWeight: 700, color }}>{zoneSummary[z] || 0}</div>
               <div style={{ fontSize: 11, color, marginTop: 2, fontWeight: filtZone === z ? 700 : 400 }}>{z}</div>
             </div>
           );
         })}
       </div>
-
-      {/* Filters */}
       <div style={{ ...s.card, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
         <div style={{ flex: 1, minWidth: 110 }}><label style={s.label}>Zona</label><select style={s.input} value={filtZone} onChange={e => setFiltZone(e.target.value)}><option value="">Todas</option>{zones.map(z => <option key={z}>{z}</option>)}</select></div>
         <div style={{ flex: 1, minWidth: 110 }}><label style={s.label}>Chofer</label><select style={s.input} value={filtDriver} onChange={e => setFiltDriver(e.target.value)}><option value="">Todos</option>{choferes.filter(c => !filtZone || c.zone === filtZone).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
+        <div style={{ flex: 1, minWidth: 110 }}><label style={s.label}>Cliente</label><select style={s.input} value={filtDestino} onChange={e => setFiltDestino(e.target.value)}><option value="">Todos</option>{destinos.map(d => <option key={d} value={d}>{d}</option>)}</select></div>
         <div style={{ flex: 1, minWidth: 110 }}><label style={s.label}>Fecha</label><input style={s.input} type="date" onChange={e => { const d = new Date(e.target.value + "T12:00:00"); setFiltDate(d.toLocaleDateString("es-MX")); }} /></div>
-        <button onClick={() => { setFiltZone(""); setFiltDriver(""); setFiltDate(""); }} style={{ ...btn("gray"), padding: "10px 14px", flex: "none" }}>Limpiar</button>
+        <button onClick={() => { setFiltZone(""); setFiltDriver(""); setFiltDate(""); setFiltDestino(""); }} style={{ ...btn("gray"), padding: "10px 14px", flex: "none" }}>Limpiar</button>
       </div>
-
-      {/* Excel export */}
       <div style={{ ...s.card, display: "flex", gap: 10, alignItems: "flex-end", background: "#f0fdf4", border: "1.5px solid #bbf7d0" }}>
         <div style={{ flex: 1 }}>
           <label style={s.label}>📊 Exportar Excel — selecciona fecha</label>
@@ -474,7 +475,6 @@ const groupedByDate = filtered.reduce((acc, e) => {
         </div>
         <button onClick={() => { const fecha = excelDate ? new Date(excelDate + "T12:00:00").toLocaleDateString("es-MX") : hoy; exportExcel(entregas, fecha); }} style={{ ...btn("green"), flex: "none", padding: "10px 18px" }}>⬇ Descargar</button>
       </div>
-
       {loading ? <Spinner /> : filtered.length === 0
         ? <div style={{ ...s.card, textAlign: "center", color: "#94a3b8", fontSize: 14 }}>No hay entregas registradas</div>
         : sortedDates.map(fecha => (
@@ -513,7 +513,7 @@ const groupedByDate = filtered.reduce((acc, e) => {
                         <button onClick={() => handleDelete(e.id)} style={{ ...btn("red"), flex: "none", padding: "6px 14px", fontSize: 12 }}>Confirmar</button>
                         <button onClick={() => setConfirmDel(null)} style={{ ...btn("gray"), flex: "none", padding: "6px 14px", fontSize: 12 }}>Cancelar</button>
                       </div>
-               : <button onClick={() => setConfirmDel(e.id)} style={{ background: "none", border: "1.5px solid #fecaca", borderRadius: 8, padding: "5px 12px", cursor: "pointer", color: "#dc2626", fontSize: 12, fontWeight: 600 }}>Eliminar</button>
+                    : <button onClick={() => setConfirmDel(e.id)} style={{ background: "none", border: "1.5px solid #fecaca", borderRadius: 8, padding: "5px 12px", cursor: "pointer", color: "#dc2626", fontSize: 12, fontWeight: 600 }}>Eliminar</button>
                   }
                 </div>
               </div>
@@ -525,7 +525,6 @@ const groupedByDate = filtered.reduce((acc, e) => {
   );
 }
 
-// ── Generic Catalog Panel ──────────────────────────────────────
 function CatalogPanel({ title, icon, table, placeholder, hint }) {
   const [items, setItems] = useState([]); const [loading, setLoading] = useState(true);
   const [newItem, setNewItem] = useState(""); const [err, setErr] = useState("");
@@ -538,7 +537,7 @@ function CatalogPanel({ title, icon, table, placeholder, hint }) {
     <div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
         <span style={{ fontSize: 20 }}>{icon}</span>
-        <h3 style={{ margin: 0, color: BRAND, fontSize: 17 }}>{title}</h3>
+        <h3 style={{ margin: 0, color: DARK, fontSize: 17 }}>{title}</h3>
         <span style={{ marginLeft: "auto", background: "#dbeafe", color: "#1e40af", fontSize: 12, fontWeight: 700, borderRadius: 20, padding: "2px 10px" }}>{items.length}</span>
       </div>
       {hint && <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 12px", background: "#f1f5f9", borderRadius: 8, padding: "8px 12px" }}>{hint}</p>}
@@ -552,7 +551,7 @@ function CatalogPanel({ title, icon, table, placeholder, hint }) {
             <div style={{ width: 28, height: 28, borderRadius: 8, background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#64748b", flexShrink: 0 }}>{idx + 1}</div>
             {editing === item.id
               ? <><input style={{ ...s.input, fontSize: 14, padding: "7px 10px" }} value={editVal} onChange={e => setEditVal(e.target.value)} onKeyDown={e => { if (e.key === "Enter") saveEdit(item.id); if (e.key === "Escape") setEditing(null); }} autoFocus /><button onClick={() => saveEdit(item.id)} style={{ ...btn("green"), flex: "none", padding: "7px 12px", fontSize: 12 }}>✓</button><button onClick={() => setEditing(null)} style={{ ...btn("gray"), flex: "none", padding: "7px 12px", fontSize: 12 }}>✕</button></>
-              : <><span style={{ flex: 1, fontWeight: 600, color: BRAND, fontSize: 14 }}>{item.name}</span>
+              : <><span style={{ flex: 1, fontWeight: 600, color: DARK, fontSize: 14 }}>{item.name}</span>
                 <button onClick={() => { setEditing(item.id); setEditVal(item.name); }} style={{ background: "none", border: "1.5px solid #e2e8f0", borderRadius: 8, padding: "5px 10px", cursor: "pointer", color: "#64748b", fontSize: 12 }}>Editar</button>
                 {confirmDel === item.id
                   ? <div style={{ display: "flex", gap: 6 }}><button onClick={() => del(item.id)} style={{ ...btn("red"), flex: "none", padding: "5px 10px", fontSize: 12 }}>Confirmar</button><button onClick={() => setConfirmDel(null)} style={{ ...btn("gray"), flex: "none", padding: "5px 10px", fontSize: 12 }}>No</button></div>
@@ -580,14 +579,13 @@ function CatalogsPanel({ products, setProducts }) {
   );
 }
 
-// ── Zones Panel ────────────────────────────────────────────────
 function ZonesPanel({ zones, setZones }) {
   const [newZone, setNewZone] = useState(""); const [err, setErr] = useState(""); const [confirmDel, setConfirmDel] = useState(null);
   const add = async () => { const z = newZone.trim(); if (!z) { setErr("Escribe el nombre"); return; } if (zones.includes(z)) { setErr("Ya existe"); return; } await db.post("zones", { name: z }); setZones(p => [...p, z]); setNewZone(""); setErr(""); };
   const del = async (z) => { await db.del("zones", `name=eq.${encodeURIComponent(z)}`); setZones(p => p.filter(x => x !== z)); setConfirmDel(null); };
   return (
     <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 12px" }}>
-      <h3 style={{ margin: "0 0 14px", color: BRAND, fontSize: 17 }}>Zonas de operación</h3>
+      <h3 style={{ margin: "0 0 14px", color: DARK, fontSize: 17 }}>Zonas de operación</h3>
       <div style={{ ...s.card, display: "flex", gap: 10, alignItems: "flex-end" }}>
         <div style={{ flex: 1 }}><label style={s.label}>Nueva zona</label><input style={s.input} placeholder="Ej. Veracruz Puerto" value={newZone} onChange={e => setNewZone(e.target.value)} onKeyDown={e => e.key === "Enter" && add()} />{err && <p style={{ color: "#dc2626", fontSize: 12, margin: "4px 0 0" }}>{err}</p>}</div>
         <button onClick={add} style={{ ...btn("brand"), flex: "none", padding: "10px 16px" }}>+ Agregar</button>
@@ -596,7 +594,7 @@ function ZonesPanel({ zones, setZones }) {
         {zones.map(z => { const [bg, color] = zoneColor(z, zones); return (
           <div key={z} style={{ ...s.card, marginBottom: 0, display: "flex", alignItems: "center", gap: 10, padding: "10px 14px" }}>
             <div style={{ width: 12, height: 12, borderRadius: "50%", background: color, flexShrink: 0 }} />
-            <span style={{ fontWeight: 600, color: BRAND, fontSize: 14 }}>{z}</span>
+            <span style={{ fontWeight: 600, color: DARK, fontSize: 14 }}>{z}</span>
             {confirmDel === z ? <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}><button onClick={() => del(z)} style={{ ...btn("red"), flex: "none", padding: "4px 10px", fontSize: 12 }}>Confirmar</button><button onClick={() => setConfirmDel(null)} style={{ ...btn("gray"), flex: "none", padding: "4px 10px", fontSize: 12 }}>No</button></div>
               : <button onClick={() => setConfirmDel(z)} style={{ marginLeft: "auto", background: "none", border: "1.5px solid #fecaca", borderRadius: 8, padding: "4px 10px", cursor: "pointer", color: "#dc2626", fontSize: 12 }}>Eliminar</button>}
           </div>
@@ -606,7 +604,6 @@ function ZonesPanel({ zones, setZones }) {
   );
 }
 
-// ── Unit Form ──────────────────────────────────────────────────
 function UnitForm({ fo, fn, choferes, err, onCancel, onSave, saveLabel }) {
   return (
     <div style={{ ...s.card, border: `1.5px solid ${BRAND}`, marginBottom: 16 }}>
@@ -627,7 +624,6 @@ function UnitForm({ fo, fn, choferes, err, onCancel, onSave, saveLabel }) {
   );
 }
 
-// ── Units Panel ────────────────────────────────────────────────
 function UnitsPanel({ users }) {
   const [units, setUnits] = useState([]); const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false); const [form, setForm] = useState({ placas: "", acoplado_placas: "", marca: "", modelo: "", anio: "", color: "", driver_id: "" });
@@ -638,20 +634,10 @@ function UnitsPanel({ users }) {
   const ef = (k, v) => setEditForm(p => ({ ...p, [k]: v }));
   const addUnit = async () => { if (!form.placas.trim()) { setErr("Las placas son requeridas"); return; } const id = "unit_" + Date.now(); const body = { ...form, id, placas: form.placas.trim().toUpperCase(), acoplado_placas: form.acoplado_placas.trim().toUpperCase() }; await db.post("units", body); setUnits(p => [...p, body]); setForm({ placas: "", acoplado_placas: "", marca: "", modelo: "", anio: "", color: "", driver_id: "" }); setShowForm(false); setErr(""); };
   const saveEdit = async (id) => { const body = { ...editForm, placas: editForm.placas.trim().toUpperCase(), acoplado_placas: editForm.acoplado_placas.trim().toUpperCase() }; await db.patch("units", `id=eq.${id}`, body); setUnits(p => p.map(u => u.id === id ? body : u)); setEditing(null); };
-  const iRow = (lbl, key, ph, fo, fn) => <div style={{ flex: "1 1 45%", minWidth: 120 }}><label style={s.label}>{lbl}</label><input style={s.input} placeholder={ph} value={fo[key]||""} onChange={e => fn(key, e.target.value)} /></div>;
-  const UForm = ({ fo, fn, onCancel, onSave, saveLabel }) => (
-    <div style={{ ...s.card, border: `1.5px solid ${BRAND}`, marginBottom: 16 }}>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>{iRow("Placas unidad *","placas","BJR-1022",fo,fn)}{iRow("Placas acoplado","acoplado_placas","TRE-1234",fo,fn)}</div>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>{iRow("Marca","marca","Kenworth",fo,fn)}{iRow("Modelo","modelo","T800",fo,fn)}{iRow("Año","anio","2020",fo,fn)}{iRow("Color","color","Blanco",fo,fn)}</div>
-      <div style={{ marginBottom: 14 }}><label style={s.label}>Chofer asignado</label><select style={s.input} value={fo.driver_id} onChange={e => fn("driver_id", e.target.value)}><option value="">Sin asignar</option>{choferes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
-      {err && <p style={{ color: "#dc2626", fontSize: 13, margin: "0 0 10px" }}>{err}</p>}
-      <div style={{ display: "flex", gap: 8 }}><button onClick={onCancel} style={btn("gray")}>Cancelar</button><button onClick={onSave} style={btn("green")}>{saveLabel}</button></div>
-    </div>
-  );
   return (
     <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 12px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <h3 style={{ margin: 0, color: BRAND, fontSize: 17 }}>Unidades y acoplados</h3>
+        <h3 style={{ margin: 0, color: DARK, fontSize: 17 }}>Unidades y acoplados</h3>
         <button onClick={() => setShowForm(!showForm)} style={{ ...btn("brand"), flex: "none", padding: "8px 16px", fontSize: 13 }}>{showForm ? "Cancelar" : "+ Nueva unidad"}</button>
       </div>
       {showForm && <UnitForm fo={form} fn={f} choferes={choferes} err={err} onCancel={() => { setShowForm(false); setErr(""); }} onSave={addUnit} saveLabel="✓ Registrar" />}
@@ -688,10 +674,10 @@ function UnitsPanel({ users }) {
   );
 }
 
-// ── Users Panel ────────────────────────────────────────────────
 function UsersPanel({ users, setUsers, zones }) {
   const [showForm, setShowForm] = useState(false); const [form, setForm] = useState({ name: "", password: "", role: "chofer", zone: "" });
   const [err, setErr] = useState(""); const [confirmDel, setConfirmDel] = useState(null); const [editZone, setEditZone] = useState(null); const [editZoneVal, setEditZoneVal] = useState("");
+  const [editPass, setEditPass] = useState(null); const [newPass, setNewPass] = useState(""); const [passErr, setPassErr] = useState("");
   const f = (k, v) => setForm(p => ({ ...p, [k]: v }));
   const addUser = async () => {
     if (!form.name.trim() || !form.password.trim()) { setErr("Completa todos los campos"); return; }
@@ -700,7 +686,6 @@ function UsersPanel({ users, setUsers, zones }) {
     setUsers(p => [...p, res[0] || body]); setForm({ name: "", password: "", role: "chofer", zone: "" }); setShowForm(false); setErr("");
   };
   const saveZone = async (id) => { await db.patch("users", `id=eq.${id}`, { zone: editZoneVal }); setUsers(p => p.map(u => u.id === id ? { ...u, zone: editZoneVal } : u)); setEditZone(null); };
-  const [editPass, setEditPass] = useState(null); const [newPass, setNewPass] = useState(""); const [passErr, setPassErr] = useState("");
   const savePass = async (id) => {
     if (!newPass.trim() || newPass.trim().length < 4) { setPassErr("Mínimo 4 caracteres"); return; }
     await db.patch("users", `id=eq.${id}`, { password: newPass.trim() });
@@ -711,12 +696,12 @@ function UsersPanel({ users, setUsers, zones }) {
   return (
     <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 12px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <h3 style={{ margin: 0, color: BRAND, fontSize: 17 }}>Gestión de usuarios</h3>
+        <h3 style={{ margin: 0, color: DARK, fontSize: 17 }}>Gestión de usuarios</h3>
         <button onClick={() => setShowForm(!showForm)} style={{ ...btn("brand"), flex: "none", padding: "8px 16px", fontSize: 13 }}>{showForm ? "Cancelar" : "+ Nuevo usuario"}</button>
       </div>
       {showForm && (
         <div style={{ ...s.card, border: "1.5px solid #bfdbfe", marginBottom: 16 }}>
-          <h4 style={{ margin: "0 0 14px", color: BRAND }}>Nuevo usuario</h4>
+          <h4 style={{ margin: "0 0 14px", color: DARK }}>Nuevo usuario</h4>
           <div style={{ marginBottom: 12 }}><label style={s.label}>Nombre completo</label><input style={s.input} placeholder="Ej. Roberto García" value={form.name} onChange={e => f("name", e.target.value)} /></div>
           <div style={{ marginBottom: 12 }}><label style={s.label}>Contraseña</label><input style={s.input} type="password" value={form.password} onChange={e => f("password", e.target.value)} /></div>
           <div style={{ marginBottom: 12 }}><label style={s.label}>Rol</label><select style={s.input} value={form.role} onChange={e => f("role", e.target.value)}><option value="chofer">Chofer</option><option value="visor">Visor</option><option value="admin">Admin</option></select></div>
@@ -729,7 +714,7 @@ function UsersPanel({ users, setUsers, zones }) {
         <div key={u.id} style={s.card}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ width: 38, height: 38, borderRadius: "50%", background: u.role === "admin" ? "#fef3c7" : u.role === "visor" ? "#ede9fe" : "#dbeafe", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{u.role === "admin" ? "🛡️" : u.role === "visor" ? "👁️" : "🚛"}</div>
-            <div style={{ flex: 1 }}><div style={{ fontWeight: 700, color: BRAND, fontSize: 15 }}>{u.name}</div><div style={{ fontSize: 12, color: "#94a3b8" }}>{u.id}</div></div>
+            <div style={{ flex: 1 }}><div style={{ fontWeight: 700, color: DARK, fontSize: 15 }}>{u.name}</div><div style={{ fontSize: 12, color: "#94a3b8" }}>{u.id}</div></div>
             {roleBadge(u.role)}
             {u.id !== "admin" && (confirmDel === u.id
               ? <div style={{ display: "flex", gap: 6 }}><button onClick={() => delUser(u.id)} style={{ ...btn("red"), flex: "none", padding: "6px 12px", fontSize: 12 }}>Confirmar</button><button onClick={() => setConfirmDel(null)} style={{ ...btn("gray"), flex: "none", padding: "6px 12px", fontSize: 12 }}>No</button></div>
@@ -743,7 +728,6 @@ function UsersPanel({ users, setUsers, zones }) {
                 : <>{u.zone ? <ZonePill zone={u.zone} zones={zones} /> : <span style={{ fontSize: 12, color: "#94a3b8", fontStyle: "italic" }}>Sin zona</span>}<button onClick={() => { setEditZone(u.id); setEditZoneVal(u.zone || ""); }} style={{ marginLeft: 4, background: "none", border: "1.5px solid #e2e8f0", borderRadius: 8, padding: "4px 10px", cursor: "pointer", color: "#64748b", fontSize: 12 }}>Cambiar</button></>}
             </div>
           )}
-          {/* Cambio de contraseña */}
           <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: 12, color: "#64748b", minWidth: 40 }}>Pass:</span>
             {editPass === u.id
@@ -762,18 +746,11 @@ function UsersPanel({ users, setUsers, zones }) {
   );
 }
 
-// ── Backoffice Shell ───────────────────────────────────────────
 function BackofficeShell({ user, users, setUsers, zones, setZones, products, setProducts, onLogout }) {
   const [tab, setTab] = useState("entregas");
-  const [deliveryView, setDeliveryView] = useState("list");
   const tabs = user.role === "admin"
     ? [["entregas","📦 Entregas"],["unidades","🚛 Unidades"],["usuarios","👥 Usuarios"],["zonas","📍 Zonas"],["catalogos","🗂️ Catálogos"]]
     : [["entregas","📦 Entregas"]];
-
-  const handleTabClick = (key) => {
-    setTab(key);
-    if (key === "entregas") setDeliveryView("list");
-  };
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc" }}>
       <div style={{ background: DARK, padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -787,11 +764,11 @@ function BackofficeShell({ user, users, setUsers, zones, setZones, products, set
       </div>
       <div style={{ background: "#fff", borderBottom: "1px solid #f1f5f9", display: "flex", overflowX: "auto" }}>
         {tabs.map(([key, label]) => (
-          <button key={key} onClick={() => handleTabClick(key)} style={{ padding: "13px 16px", border: "none", background: "none", cursor: "pointer", fontWeight: tab === key ? 700 : 400, color: tab === key ? BRAND : "#94a3b8", borderBottom: tab === key ? `2px solid ${BRAND}` : "2px solid transparent", fontSize: 13, whiteSpace: "nowrap", transition: "color 0.2s" }}>{label}</button>
+          <button key={key} onClick={() => setTab(key)} style={{ padding: "13px 16px", border: "none", background: "none", cursor: "pointer", fontWeight: tab === key ? 700 : 400, color: tab === key ? BRAND : "#94a3b8", borderBottom: tab === key ? `2px solid ${BRAND}` : "2px solid transparent", fontSize: 13, whiteSpace: "nowrap" }}>{label}</button>
         ))}
       </div>
       <div>
-        {tab === "entregas" && <DeliveriesPanel zones={zones} users={users} deliveryView={deliveryView} setDeliveryView={setDeliveryView} />}
+        {tab === "entregas" && <DeliveriesPanel zones={zones} users={users} />}
         {tab === "unidades" && user.role === "admin" && <UnitsPanel users={users} />}
         {tab === "usuarios" && user.role === "admin" && <UsersPanel users={users} setUsers={setUsers} zones={zones} />}
         {tab === "zonas" && user.role === "admin" && <ZonesPanel zones={zones} setZones={setZones} />}
@@ -801,7 +778,6 @@ function BackofficeShell({ user, users, setUsers, zones, setZones, products, set
   );
 }
 
-// ── App Root ───────────────────────────────────────────────────
 export default function App() {
   const [session, setSession] = useState(null);
   const [users, setUsers] = useState([]);
@@ -822,8 +798,6 @@ export default function App() {
       db.get("destinations", "select=*&order=name"),
       db.get("products", "select=*&order=name"),
     ]).then(([u, z, un, o, d, pr]) => {
-      console.log("users:", u);
-      console.log("zones:", z);
       setUsers(Array.isArray(u) ? u : []);
       setZones(Array.isArray(z) ? z.map(x => x.name) : []);
       setUnits(Array.isArray(un) ? un : []);
@@ -831,10 +805,7 @@ export default function App() {
       setDestinations(Array.isArray(d) ? d : []);
       setProducts(Array.isArray(pr) ? pr : []);
       setAppReady(true);
-    }).catch(err => {
-      console.error("Error cargando datos:", err);
-      setAppReady(true);
-    });
+    }).catch(() => setAppReady(true));
   }, []);
 
   if (!appReady) return (
@@ -847,7 +818,7 @@ export default function App() {
   if (!session) return <Login onLogin={u => { setSession(u); setView("home"); }} />;
 
   if (session.role === "chofer") {
-    const fresh = users.find(u => u.id === session.id) || session;
+    const fresh = users.find(u => String(u.id) === String(session.id)) || session;
     const unit = units.find(u => String(u.driver_id) === String(fresh.id)) || null;
     if (view === "new") return <NewDelivery driver={fresh} origins={origins} destinations={destinations} products={products} unit={unit} onSave={() => setView("home")} onCancel={() => setView("home")} />;
     return <DriverHome driver={fresh} zones={zones} unit={unit} onNew={() => setView("new")} onLogout={() => setSession(null)} />;
