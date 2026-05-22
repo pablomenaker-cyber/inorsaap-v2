@@ -454,7 +454,7 @@ function DeliveriesPanel({ zones, users }) {
                 </div>
                 <div style={{ fontSize: 13, color: "#475569" }}>{e.driver_name} · {e.hora}</div>
                 {e.unit_placas && <div style={{ fontSize: 12, color: "#64748b" }}>🚛 {e.unit_placas}{e.unit_acoplado ? " + " + e.unit_acoplado : ""}</div>}
-                <div style={{ fontSize: 13, color: "#475569" }}>{e.origen} → {e.destino}</div>
+                <div style={{ fontSize: 13, color: "#475569" }}><div style={{ fontSize: 13, color: "#475569" }}>{e.origen} → {e.destino}</div>                 <div style={{ fontSize: 13, color: "#475569" }}>📦 {e.producto || "—"}</div></div>
                 <div style={{ fontSize: 13, color: "#475569" }}>Cliente: {e.cliente}</div>
               </div>
               <div style={{ textAlign: "right", flexShrink: 0 }}>
