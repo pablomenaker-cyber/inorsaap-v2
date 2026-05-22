@@ -407,21 +407,6 @@ function DeliveryDetail({ e, zones, onBack, onDelete, isAdmin }) {
         <div style={s.card}>
           <div style={{ fontWeight: 600, color: DARK, marginBottom: 10 }}>✍️ Firma del chofer</div>
           <img src={e.firma_url} alt="firma" style={{ width: "100%", borderRadius: 8, maxHeight: 130, background: "#f8fafc", objectFit: "contain" }} />
-          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <a href={e.firma_url} download={`firma_${e.folio||e.remision}.png`} style={{ ...btn("brand"), flex: 1, textAlign: "center", textDecoration: "none", padding: "9px 0", fontSize: 13 }}>⬇ Descargar firma</a>
-            <button onClick={async () => {
-              try {
-                const res = await fetch(e.firma_url);
-                const blob = await res.blob();
-                const file = new File([blob], `firma_${e.folio||e.remision}.png`, { type: "image/png" });
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                  await navigator.share({ files: [file], title: `Firma ${e.folio||e.remision}` });
-                } else {
-                  window.open(e.firma_url, "_blank");
-                }
-              } catch(err) { if (err.name !== "AbortError") alert("No se pudo compartir la firma."); }
-            }} style={{ ...btn("green"), flex: 1, fontSize: 13 }}>📲 Compartir firma</button>
-          </div>
         </div>
       )}
     </div>
