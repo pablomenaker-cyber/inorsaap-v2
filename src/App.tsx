@@ -411,7 +411,8 @@ function DeliveriesPanel({ zones, users }) {
   const [filtZone, setFiltZone] = useState(""); const [filtDriver, setFiltDriver] = useState(""); const [filtDate, setFiltDate] = useState("");
   const [excelDate, setExcelDate] = useState("");
   const hoy = new Date().toLocaleDateString("es-MX");
-  const choferes const [confirmDel, setConfirmDel] = useState(null); = users.filter(u => u.role === "chofer");
+  const choferes = users.filter(u => u.role === "chofer");
+  const [confirmDel, setConfirmDel] = useState(null);
 
   useEffect(() => { db.get("entregas", "select=*&order=created_at.desc").then(d => { setEntregas(Array.isArray(d) ? d : []); setLoading(false); }); }, []);
 
