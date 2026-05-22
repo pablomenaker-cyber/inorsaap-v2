@@ -264,7 +264,7 @@ function DriverHome({ driver, zones, unit, onNew, onLogout }) {
               </div>
               <div style={{ fontSize: 13, color: "#475569" }}><b>Origen:</b> {e.origen}</div>
               <div style={{ fontSize: 13, color: "#475569" }}><b>Destino:</b> {e.destino}</div>
-              <div style={{ fontSize: 13, color: "#475569" }}><b>Cliente:</b> {e.cliente} · {e.hora}</div>
+              <div style={{ fontSize: 13, color: "#475569" }}><b>Producto:</b> {e.producto || "—"}</div>               <div style={{ fontSize: 13, color: "#475569" }}><b>Cliente:</b> {e.cliente} · {e.hora}</div>
             </div>
           ))}
       </>}
