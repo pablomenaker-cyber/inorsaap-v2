@@ -561,15 +561,6 @@ function UnitsPanel({ users }) {
   const addUnit = async () => { if (!form.placas.trim()) { setErr("Las placas son requeridas"); return; } const id = "unit_" + Date.now(); const body = { ...form, id, placas: form.placas.trim().toUpperCase(), acoplado_placas: form.acoplado_placas.trim().toUpperCase() }; await db.post("units", body); setUnits(p => [...p, body]); setForm({ placas: "", acoplado_placas: "", marca: "", modelo: "", anio: "", color: "", driver_id: "" }); setShowForm(false); setErr(""); };
   const saveEdit = async (id) => { const body = { ...editForm, placas: editForm.placas.trim().toUpperCase(), acoplado_placas: editForm.acoplado_placas.trim().toUpperCase() }; await db.patch("units", `id=eq.${id}`, body); setUnits(p => p.map(u => u.id === id ? body : u)); setEditing(null); };
   const iRow = (lbl, key, ph, fo, fn) => <div style={{ flex: "1 1 45%", minWidth: 120 }}><label style={s.label}>{lbl}</label><input style={s.input} placeholder={ph} value={fo[key]} onChange={e => fn(key, e.target.value)} /></div>;
-  const UForm = ({ fo, fn, onCancel, onSave, saveLabel }) => (
-    <div style={{ ...s.card, border: `1.5px solid ${BRAND}`, marginBottom: 16 }}>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>{iRow("Placas unidad *","placas","BJR-1022",fo,fn)}{iRow("Placas acoplado","acoplado_placas","TRE-1234",fo,fn)}</div>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>{iRow("Marca","marca","Kenworth",fo,fn)}{iRow("Modelo","modelo","T800",fo,fn)}{iRow("Año","anio","2020",fo,fn)}{iRow("Color","color","Blanco",fo,fn)}</div>
-      <div style={{ marginBottom: 14 }}><label style={s.label}>Chofer asignado</label><select style={s.input} value={fo.driver_id} onChange={e => fn("driver_id", e.target.value)}><option value="">Sin asignar</option>{choferes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
-      {err && <p style={{ color: "#dc2626", fontSize: 13, margin: "0 0 10px" }}>{err}</p>}
-      <div style={{ display: "flex", gap: 8 }}><button onClick={onCancel} style={btn("gray")}>Cancelar</button><button onClick={onSave} style={btn("green")}>{saveLabel}</button></div>
-    </div>
-  );
   return (
     <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 12px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
