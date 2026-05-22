@@ -462,31 +462,49 @@ function DeliveriesPanel({ zones, users }) {
 
       {loading ? <Spinner /> : filtered.length === 0
         ? <div style={{ ...s.card, textAlign: "center", color: "#94a3b8", fontSize: 14 }}>No hay entregas registradas</div>
-        : filtered.map(e => (
-          <div key={e.id} style={{ ...s.card, cursor: "pointer" }} onClick={() => setSel(e)}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontWeight: 700, color: BRAND, fontSize: 15 }}>Rem. {e.remision}</span>
-                  {e.driver_zone && <ZonePill zone={e.driver_zone} zones={zones} />}
-                </div>
-                <div style={{ fontSize: 13, color: "#475569" }}>{e.driver_name} · {e.hora}</div>
-                {e.unit_placas && <div style={{ fontSize: 12, color: "#64748b" }}>🚛 {e.unit_placas}{e.unit_acoplado ? " + " + e.unit_acoplado : ""}</div>}
-                <div style={{ fontSize: 13, color: "#475569" }}>{e.origen} → {e.destino}</div>
-                <div style={{ fontSize: 13, color: "#475569" }}>Cliente: {e.cliente}</div>
-              </div>
-              <div style={{ textAlign: "right", flexShrink: 0 }}>
-                <span style={{ background: "#dcfce7", color: "#166534", fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "2px 10px" }}>✓</span>
-                <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 6 }}>{e.fecha}</div>
-                {e.foto_url && <div style={{ fontSize: 11, color: BRAND, marginTop: 2 }}>📷</div>}
-                {e.firma_url && <div style={{ fontSize: 11, color: "#7c3aed", marginTop: 2 }}>✍️</div>}
-              </div>
+        : sortedDates.map(fecha => (
+          <div key={fecha}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "16px 0 8px" }}>
+              <div style={{ height: 1, flex: 1, background: "#e2e8f0" }} />
+              <span style={{ fontSize: 12, fontWeight: 700, color: "#64748b", background: "#f8fafc", padding: "3px 12px", borderRadius: 20, border: "1px solid #e2e8f0" }}>
+                {fecha === hoy ? "📅 Hoy — " + fecha : fecha}
+              </span>
+              <div style={{ height: 1, flex: 1, background: "#e2e8f0" }} />
             </div>
+            {groupedByDate[fecha].map(e => (
+              <div key={e.id} style={{ ...s.card }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", cursor: "pointer" }} onClick={() => setSel(e)}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontWeight: 700, color: BRAND, fontSize: 15 }}>{e.folio || e.remision}</span>
+                      {e.driver_zone && <ZonePill zone={e.driver_zone} zones={zones} />}
+                    </div>
+                    <div style={{ fontSize: 13, color: "#475569" }}>{e.driver_name} · {e.hora}</div>
+                    {e.unit_placas && <div style={{ fontSize: 12, color: "#64748b" }}>🚛 {e.unit_placas}{e.unit_acoplado ? " + " + e.unit_acoplado : ""}</div>}
+                    <div style={{ fontSize: 13, color: "#475569" }}>{e.origen} → {e.destino}</div>
+                    {e.producto && <div style={{ fontSize: 13, color: BRAND }}>📦 {e.producto}</div>}
+                    <div style={{ fontSize: 13, color: "#475569" }}>Rem. {e.remision}</div>
+                  </div>
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <span style={{ background: "#dcfce7", color: "#166534", fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "2px 10px" }}>✓</span>
+                    <div style={{ fontSize: 11, color: "#94a3b8", marginTop: 6 }}>{e.fecha}</div>
+                    {e.foto_url && <div style={{ fontSize: 11, color: BRAND, marginTop: 2 }}>📷</div>}
+                    {e.firma_url && <div style={{ fontSize: 11, color: "#7c3aed", marginTop: 2 }}>✍️</div>}
+                  </div>
+                </div>
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #f1f5f9", display: "flex", justifyContent: "flex-end" }}>
+                  {confirmDel === e.id
+                    ? <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => handleDelete(e.id)} style={{ ...btn("red"), flex: "none", padding: "6px 14px", fontSize: 12 }}>Confirmar</button>
+                        <button onClick={() => setConfirmDel(null)} style={{ ...btn("gray"), flex: "none", padding: "6px 14px", fontSize: 12 }}>Cancelar</button>
+                      </div>
+                    : <button onClick={() => setConfirmDel(e.id)} style={{ background: "none", border: "1.5px solid #fecaca", borderRadius: 8, padding: "5px 12px", cursor: "pointer", color: "#dc2626", fontSize: 12, fontWeight: 600 }}>Eliminar</button>
+                  }
+                </div>
+              </div>
+            ))}
           </div>
         ))
-      }
-    </div>
-  );
 }
 
 // ── Generic Catalog Panel ──────────────────────────────────────
