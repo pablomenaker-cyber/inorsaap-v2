@@ -197,7 +197,7 @@ function Login({ onLogin }) {
   const [users, setUsers] = useState([]);
   const [uid, setUid] = useState(""); const [pass, setPass] = useState(""); const [err, setErr] = useState(""); const [loading, setLoading] = useState(true);
   useEffect(() => { db.get("users", "select=*&order=name").then(d => { setUsers(Array.isArray(d) ? d : []); setLoading(false); }); }, []);
-  const login = () => { const u = users.find(u => u.id === uid); if (u && u.password === pass) { setErr(""); onLogin(u); } else setErr("Usuario o contraseña incorrectos"); };
+  const login = () => { const u = users.find(u => String(u.id) === String(uid)); if (u && u.password === pass) { setErr(""); onLogin(u); } else setErr("Usuario o contraseña incorrectos"); };
   return (
     <div style={{ minHeight: "100vh", background: `linear-gradient(135deg,#1a3d5c,${BRAND})`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div style={{ background: "#fff", borderRadius: 20, padding: "36px 28px", width: "100%", maxWidth: 360, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
@@ -393,7 +393,7 @@ function DeliveriesPanel({ zones, users }) {
   const hoy = new Date().toLocaleDateString("es-MX");
   const choferes = users.filter(u => u.role === "chofer");
 
-  useEffect(() => { db.get("entregas", "select=*&order=created_at.desc").then(d => { setEntregas(Array.isArray(d) ? d : []); setLoading(false); }); }, []);
+  useEffect(() => { db.get("entregas", "select=*&order=created_at.desc").then(d => { setEntregas(Array.isArray(d) ? d : []); setLoading(false); }).catch(() => setLoading(false)); }, []);
 
   if (sel) return <DeliveryDetail e={sel} zones={zones} onBack={() => setSel(null)} />;
   const filtered = entregas.filter(e => (!filtZone || e.driver_zone === filtZone) && (!filtDriver || e.driver_id === filtDriver) && (!filtDate || e.fecha === filtDate));
