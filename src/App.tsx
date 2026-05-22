@@ -505,7 +505,7 @@ function DeliveriesPanel({ zones, users }) {
             ))}
           </div>
         ))
-}
+}}
 
 // ── Generic Catalog Panel ──────────────────────────────────────
 function CatalogPanel({ title, icon, table, placeholder, hint }) {
