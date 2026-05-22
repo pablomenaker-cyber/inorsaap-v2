@@ -31,16 +31,20 @@ const db = {
 };
 
 // ── Brand / Styles ─────────────────────────────────────────────
-const BRAND = "#2d5f8a";
+const BRAND = "#3b82f6";
+const DARK = "#0f172a";
+const CYAN = "#06b6d4";
+const SUCCESS = "#10b981";
+const WARNING = "#f59e0b";
 const s = {
-  card: { background: "#fff", borderRadius: 14, boxShadow: "0 2px 12px rgba(0,0,0,0.08)", padding: "18px 16px", marginBottom: 12 },
-  input: { width: "100%", padding: "10px 12px", borderRadius: 8, border: "1.5px solid #cbd5e1", fontSize: 15, boxSizing: "border-box", background: "#f8fafc", outline: "none" },
-  label: { fontSize: 13, fontWeight: 600, color: "#475569", marginBottom: 4, display: "block" },
+  card: { background: "#fff", borderRadius: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", padding: "18px 16px", marginBottom: 12, border: "0.5px solid #e2e8f0" },
+  input: { width: "100%", padding: "11px 14px", borderRadius: 10, border: "1.5px solid #e2e8f0", fontSize: 15, boxSizing: "border-box", background: "#f8fafc", outline: "none" },
+  label: { fontSize: 12, fontWeight: 600, color: "#64748b", marginBottom: 4, display: "block", textTransform: "uppercase", letterSpacing: "0.5px" },
 };
 const btn = (color = "brand", extra = {}) => ({
-  flex: 1, padding: "10px 0", borderRadius: 8, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14,
-  background: color === "brand" ? BRAND : color === "green" ? "#16a34a" : color === "red" ? "#dc2626" : color === "blue" ? "#2563eb" : "#e2e8f0",
-  color: color === "gray" ? "#374151" : "#fff", ...extra
+  flex: 1, padding: "11px 0", borderRadius: 10, border: "none", cursor: "pointer", fontWeight: 600, fontSize: 14,
+  background: color === "brand" ? BRAND : color === "green" ? SUCCESS : color === "red" ? "#ef4444" : color === "blue" ? BRAND : color === "dark" ? DARK : color === "cyan" ? CYAN : "#f1f5f9",
+  color: color === "gray" ? "#374151" : "#fff", letterSpacing: "0.2px", ...extra
 });
 
 const ZONE_PALETTE = [["#dbeafe","#1e40af"],["#dcfce7","#166534"],["#fef3c7","#92400e"],["#ede9fe","#5b21b6"],["#fce7f3","#9d174d"],["#ffedd5","#9a3412"],["#e0f2fe","#0c4a6e"],["#f0fdf4","#14532d"]];
@@ -58,9 +62,9 @@ const roleBadge = (role) => {
 
 const InorsaLogo = ({ height = 36, white = false }) => (
   <svg height={height} viewBox="0 0 560 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <text x="4" y="82" fontFamily="Arial Black,sans-serif" fontWeight="900" fontSize="90" fontStyle="italic" fill={white ? "#fff" : BRAND} letterSpacing="-2">INORSAPP</text>
-    <text x="172" y="102" fontFamily="Arial,sans-serif" fontWeight="400" fontSize="15" fill={white ? "rgba(255,255,255,0.8)" : BRAND} letterSpacing="7">INGENIERÍA</text>
-    <line x1="4" y1="90" x2="556" y2="90" stroke={white ? "#fff" : BRAND} strokeWidth="2.5"/>
+    <text x="4" y="82" fontFamily="Arial Black,sans-serif" fontWeight="900" fontSize="90" fontStyle="italic" fill={white ? "#fff" : DARK} letterSpacing="-2">INORSAPP</text>
+    <text x="172" y="102" fontFamily="Arial,sans-serif" fontWeight="400" fontSize="15" fill={white ? "rgba(255,255,255,0.6)" : "#64748b"} letterSpacing="7">INGENIERÍA</text>
+    <line x1="4" y1="90" x2="556" y2="90" stroke={white ? "rgba(255,255,255,0.3)" : BRAND} strokeWidth="2.5"/>
   </svg>
 );
 
@@ -200,11 +204,11 @@ function Login({ onLogin }) {
   useEffect(() => { db.get("users", "select=*&order=name").then(d => { setUsers(Array.isArray(d) ? d : []); setLoading(false); }).catch(() => setLoading(false)); }, []);
   const login = () => { const u = users.find(u => String(u.id) === String(uid)); if (u && u.password === pass) { setErr(""); onLogin(u); } else setErr("Usuario o contraseña incorrectos"); };
   return (
-    <div style={{ minHeight: "100vh", background: `linear-gradient(135deg,#1a3d5c,${BRAND})`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-      <div style={{ background: "#fff", borderRadius: 20, padding: "36px 28px", width: "100%", maxWidth: 360, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
+    <div style={{ minHeight: "100vh", background: `linear-gradient(135deg, ${DARK}, #1e3a5f)`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+      <div style={{ background: "#fff", borderRadius: 24, padding: "40px 28px", width: "100%", maxWidth: 360, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
           <InorsaLogo height={44} />
-          <p style={{ color: "#64748b", fontSize: 13, margin: "10px 0 0" }}>Sistema de registro de entregas</p>
+          <p style={{ color: "#94a3b8", fontSize: 13, margin: "10px 0 0", letterSpacing: "0.5px" }}>Sistema de registro de entregas</p>
         </div>
         {loading ? <Spinner text="Cargando usuarios..." /> : <>
           <div style={{ marginBottom: 14 }}>
@@ -233,15 +237,15 @@ function DriverHome({ driver, zones, unit, onNew, onLogout }) {
   useEffect(() => { db.get("entregas", `select=*&driver_id=eq.${driver.id}&order=created_at.desc`).then(d => { setEntregas(Array.isArray(d) ? d : []); setLoading(false); }); }, [driver.id]);
   const hoyList = entregas.filter(e => e.fecha === hoy);
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", padding: "16px 12px" }}>
+    <div style={{ maxWidth: 480, margin: "0 auto", padding: "16px 12px", background: "#f8fafc", minHeight: "100vh" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <InorsaLogo height={26} />
-        <button onClick={onLogout} style={{ background: "none", border: "1.5px solid #e2e8f0", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: "#64748b", fontSize: 13 }}>Salir</button>
+        <button onClick={onLogout} style={{ background: "none", border: "1.5px solid #e2e8f0", borderRadius: 10, padding: "6px 14px", cursor: "pointer", color: "#64748b", fontSize: 13, fontWeight: 500 }}>Salir</button>
       </div>
-      <div style={{ ...s.card, background: `linear-gradient(135deg,#1a3d5c,${BRAND})`, color: "#fff", marginBottom: 14 }}>
-        <div style={{ fontSize: 16, fontWeight: 700 }}>Hola, {driver.name.split(" ")[0]} 👋</div>
-        <div style={{ fontSize: 13, opacity: .8, marginTop: 2 }}>{hoy}</div>
-        {driver.zone && <div style={{ marginTop: 8 }}><ZonePill zone={driver.zone} zones={zones} style={{ background: "rgba(255,255,255,0.2)", color: "#fff" }} /></div>}
+      <div style={{ background: `linear-gradient(135deg, ${DARK}, #1e3a5f)`, borderRadius: 20, color: "#fff", marginBottom: 14, padding: "20px 18px" }}>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>Hola, {driver.name.split(" ")[0]} 👋</div>
+        <div style={{ fontSize: 13, opacity: .6, marginTop: 2 }}>{hoy}</div>
+        {driver.zone && <div style={{ marginTop: 10 }}><ZonePill zone={driver.zone} zones={zones} style={{ background: "rgba(6,182,212,0.2)", color: "#67e8f9", border: "0.5px solid rgba(6,182,212,0.3)" }} /></div>}
       </div>
       {unit && <UnitCard unit={unit} style={{ marginBottom: 14 }} />}
       {loading ? <Spinner /> : <>
@@ -253,7 +257,7 @@ function DriverHome({ driver, zones, unit, onNew, onLogout }) {
             </div>
           ))}
         </div>
-        <button onClick={onNew} style={{ width: "100%", padding: "14px 0", borderRadius: 12, border: "none", cursor: "pointer", background: BRAND, color: "#fff", fontSize: 16, fontWeight: 700, marginBottom: 20 }}>+ Nueva entrega</button>
+        <button onClick={onNew} style={{ width: "100%", padding: "15px 0", borderRadius: 14, border: "none", cursor: "pointer", background: BRAND, color: "#fff", fontSize: 16, fontWeight: 700, marginBottom: 20, letterSpacing: "0.3px" }}>+ Nueva entrega</button>
         <h3 style={{ margin: "0 0 10px", color: BRAND, fontSize: 15 }}>Mis entregas de hoy</h3>
         {hoyList.length === 0 ? <div style={{ ...s.card, textAlign: "center", color: "#94a3b8", fontSize: 14 }}>Sin entregas registradas hoy</div>
           : hoyList.map(e => (
@@ -264,7 +268,7 @@ function DriverHome({ driver, zones, unit, onNew, onLogout }) {
               </div>
               <div style={{ fontSize: 13, color: "#475569" }}><b>Origen:</b> {e.origen}</div>
               <div style={{ fontSize: 13, color: "#475569" }}><b>Destino:</b> {e.destino}</div>
-              <div style={{ fontSize: 13, color: "#475569" }}><b>Producto:</b> {e.producto || "—"}</div>               <div style={{ fontSize: 13, color: "#475569" }}><b>Cliente:</b> {e.cliente} · {e.hora}</div>
+              <div style={{ fontSize: 13, color: "#475569" }}><b>Cliente:</b> {e.cliente} · {e.hora}</div>
             </div>
           ))}
       </>}
@@ -321,8 +325,7 @@ function NewDelivery({ driver, origins, destinations, products, unit, onSave, on
           <h3 style={{ margin: "0 0 16px", color: BRAND }}>¿De dónde a dónde?</h3>
           <div style={{ marginBottom: 14 }}><label style={s.label}>⛏️ Origen</label><select style={s.input} value={form.origen} onChange={e => set("origen", e.target.value)}><option value="">Seleccionar...</option>{origins.map(o => <option key={o.id} value={o.name}>{o.name}</option>)}</select></div>
           <div style={{ marginBottom: 18 }}><label style={s.label}>🏁 Destino</label><select style={s.input} value={form.destino} onChange={e => set("destino", e.target.value)}><option value="">Seleccionar...</option>{destinations.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}</select></div>
-          <div style={{ marginBottom: 18 }}><label style={s.label}>📦 Producto</label><select style={s.input} value={form.producto} onChange={e => set("producto", e.target.value)}><option value="">Seleccionar producto...</option>{products.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}</select></div>
-          <button disabled={!form.origen || !form.destino || !form.producto} onClick={() => setStep(2)} style={{ ...btn("brand"), width: "100%", opacity: (!form.origen || !form.destino || !form.producto) ? 0.5 : 1 }}>Siguiente →</button>
+          <button disabled={!form.origen || !form.destino} onClick={() => setStep(2)} style={{ ...btn("brand"), width: "100%", opacity: (!form.origen || !form.destino) ? 0.5 : 1 }}>Siguiente →</button>
         </div>
       )}
       {step === 2 && (
@@ -454,7 +457,7 @@ function DeliveriesPanel({ zones, users }) {
                 </div>
                 <div style={{ fontSize: 13, color: "#475569" }}>{e.driver_name} · {e.hora}</div>
                 {e.unit_placas && <div style={{ fontSize: 12, color: "#64748b" }}>🚛 {e.unit_placas}{e.unit_acoplado ? " + " + e.unit_acoplado : ""}</div>}
-                <div style={{ fontSize: 13, color: "#475569" }}><div style={{ fontSize: 13, color: "#475569" }}>{e.origen} → {e.destino}</div>                 <div style={{ fontSize: 13, color: "#475569" }}>📦 {e.producto || "—"}</div></div>
+                <div style={{ fontSize: 13, color: "#475569" }}>{e.origen} → {e.destino}</div>
                 <div style={{ fontSize: 13, color: "#475569" }}>Cliente: {e.cliente}</div>
               </div>
               <div style={{ textAlign: "right", flexShrink: 0 }}>
@@ -716,18 +719,18 @@ function BackofficeShell({ user, users, setUsers, zones, setZones, products, set
     : [["entregas","📦 Entregas"]];
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc" }}>
-      <div style={{ background: BRAND, padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ background: DARK, padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <InorsaLogo height={28} white />
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <NotificationsBell />
-          <span style={{ background: "rgba(255,255,255,0.2)", color: "#fff", fontSize: 11, borderRadius: 20, padding: "2px 10px", fontWeight: 600 }}>{user.role === "admin" ? "Admin" : "Visor"}</span>
-          <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 13 }}>{user.name}</span>
-          <button onClick={onLogout} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: "#fff", fontSize: 13 }}>Salir</button>
+          <span style={{ background: "rgba(59,130,246,0.25)", color: "#93c5fd", fontSize: 11, borderRadius: 20, padding: "2px 10px", fontWeight: 600 }}>{user.role === "admin" ? "Admin" : "Visor"}</span>
+          <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 13 }}>{user.name}</span>
+          <button onClick={onLogout} style={{ background: "rgba(255,255,255,0.08)", border: "0.5px solid rgba(255,255,255,0.15)", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: "#fff", fontSize: 13 }}>Salir</button>
         </div>
       </div>
-      <div style={{ background: "#fff", borderBottom: "1px solid #e2e8f0", display: "flex", overflowX: "auto" }}>
+      <div style={{ background: "#fff", borderBottom: "1px solid #f1f5f9", display: "flex", overflowX: "auto" }}>
         {tabs.map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)} style={{ padding: "12px 14px", border: "none", background: "none", cursor: "pointer", fontWeight: tab === key ? 700 : 400, color: tab === key ? BRAND : "#64748b", borderBottom: tab === key ? `2px solid ${BRAND}` : "2px solid transparent", fontSize: 13, whiteSpace: "nowrap" }}>{label}</button>
+          <button key={key} onClick={() => setTab(key)} style={{ padding: "13px 16px", border: "none", background: "none", cursor: "pointer", fontWeight: tab === key ? 700 : 400, color: tab === key ? BRAND : "#94a3b8", borderBottom: tab === key ? `2px solid ${BRAND}` : "2px solid transparent", fontSize: 13, whiteSpace: "nowrap", transition: "color 0.2s" }}>{label}</button>
         ))}
       </div>
       <div>
@@ -778,7 +781,7 @@ export default function App() {
   }, []);
 
   if (!appReady) return (
-    <div style={{ minHeight: "100vh", background: `linear-gradient(135deg,#1a3d5c,${BRAND})`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
+    <div style={{ minHeight: "100vh", background: `linear-gradient(135deg, ${DARK}, #1e3a5f)`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 20 }}>
       <InorsaLogo height={50} white />
       <Spinner text="Iniciando Inorsapp..." />
     </div>
