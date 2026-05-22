@@ -280,6 +280,10 @@ function NewDelivery({ driver, origins, destinations, products, unit, onSave, on
   }, []);
 
   const handleSave = async () => {
+    if (!form.origen || !form.destino || !form.producto) { alert("Faltan datos de ruta. Regresa al paso 1."); return; }
+    if (!form.remision) { alert("El número de remisión es obligatorio. Regresa al paso 2."); return; }
+    if (!form.foto) { alert("La foto de la remisión es obligatoria. Regresa al paso 3."); return; }
+    if (!signed) { alert("La firma del chofer es obligatoria."); return; }
     setSaving(true);
     try {
       const ts = Date.now();
@@ -311,10 +315,29 @@ function NewDelivery({ driver, origins, destinations, products, unit, onSave, on
       {step === 1 && (
         <div style={s.card}>
           <h3 style={{ margin: "0 0 16px", color: DARK }}>¿De dónde a dónde?</h3>
-          <div style={{ marginBottom: 14 }}><label style={s.label}>⛏️ Origen</label><select style={s.input} value={form.origen} onChange={e => set("origen", e.target.value)}><option value="">Seleccionar...</option>{origins.map(o => <option key={o.id} value={o.name}>{o.name}</option>)}</select></div>
-          <div style={{ marginBottom: 14 }}><label style={s.label}>🏁 Destino</label><select style={s.input} value={form.destino} onChange={e => set("destino", e.target.value)}><option value="">Seleccionar...</option>{destinations.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}</select></div>
-          <div style={{ marginBottom: 18 }}><label style={s.label}>📦 Producto</label><select style={s.input} value={form.producto} onChange={e => set("producto", e.target.value)}><option value="">Seleccionar producto...</option>{products.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}</select></div>
-          <button disabled={!form.origen || !form.destino || !form.producto} onClick={() => setStep(2)} style={{ ...btn("brand"), width: "100%", opacity: (!form.origen || !form.destino || !form.producto) ? 0.5 : 1 }}>Siguiente →</button>
+          <div style={{ marginBottom: 14 }}>
+            <label style={s.label}>⛏️ Origen <span style={{ color: "#ef4444" }}>*</span></label>
+            <select style={{ ...s.input, borderColor: !form.origen ? "#fca5a5" : "#e2e8f0" }} value={form.origen} onChange={e => set("origen", e.target.value)}>
+              <option value="">Seleccionar origen...</option>
+              {origins.map(o => <option key={o.id} value={o.name}>{o.name}</option>)}
+            </select>
+          </div>
+          <div style={{ marginBottom: 14 }}>
+            <label style={s.label}>🏁 Destino <span style={{ color: "#ef4444" }}>*</span></label>
+            <select style={{ ...s.input, borderColor: !form.destino ? "#fca5a5" : "#e2e8f0" }} value={form.destino} onChange={e => set("destino", e.target.value)}>
+              <option value="">Seleccionar destino...</option>
+              {destinations.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
+            </select>
+          </div>
+          <div style={{ marginBottom: 18 }}>
+            <label style={s.label}>📦 Producto <span style={{ color: "#ef4444" }}>*</span></label>
+            <select style={{ ...s.input, borderColor: !form.producto ? "#fca5a5" : "#e2e8f0" }} value={form.producto} onChange={e => set("producto", e.target.value)}>
+              <option value="">Seleccionar producto...</option>
+              {products.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
+            </select>
+          </div>
+          {(!form.origen || !form.destino || !form.producto) && <p style={{ fontSize: 12, color: "#ef4444", margin: "0 0 12px" }}>⚠️ Completa todos los campos para continuar.</p>}
+          <button disabled={!form.origen || !form.destino || !form.producto} onClick={() => setStep(2)} style={{ ...btn("brand"), width: "100%", opacity: (!form.origen || !form.destino || !form.producto) ? 0.4 : 1 }}>Siguiente →</button>
         </div>
       )}
       {step === 2 && (
@@ -325,28 +348,49 @@ function NewDelivery({ driver, origins, destinations, products, unit, onSave, on
             <label style={s.label}>Folio Inorsapp</label>
             <div style={{ ...s.input, background: "#eff6ff", color: BRAND, fontWeight: 700, fontSize: 16, letterSpacing: "1px", cursor: "default" }}>{form.folio || "Generando..."}</div>
           </div>
-          <div style={{ marginBottom: 12 }}><label style={s.label}>Número de remisión</label><input style={s.input} placeholder="Número del banco/mina" value={form.remision} onChange={e => set("remision", e.target.value)} /></div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={s.label}>Número de remisión <span style={{ color: "#ef4444" }}>*</span></label>
+            <input style={{ ...s.input, borderColor: !form.remision ? "#fca5a5" : "#e2e8f0" }} placeholder="Número del banco/mina" value={form.remision} onChange={e => set("remision", e.target.value)} />
+            {!form.remision && <p style={{ fontSize: 12, color: "#ef4444", margin: "4px 0 0" }}>⚠️ El número de remisión es obligatorio.</p>}
+          </div>
           <div style={{ marginBottom: 16 }}><label style={s.label}>Hora de entrega</label><input style={s.input} type="time" value={form.hora} onChange={e => set("hora", e.target.value)} /></div>
-          <div style={{ display: "flex", gap: 8 }}><button onClick={() => setStep(1)} style={btn("gray")}>← Atrás</button><button disabled={!form.remision} onClick={() => setStep(3)} style={{ ...btn("brand"), opacity: !form.remision ? 0.5 : 1 }}>Siguiente →</button></div>
+          <div style={{ display: "flex", gap: 8 }}><button onClick={() => setStep(1)} style={btn("gray")}>← Atrás</button><button disabled={!form.remision} onClick={() => setStep(3)} style={{ ...btn("brand"), opacity: !form.remision ? 0.4 : 1 }}>Siguiente →</button></div>
         </div>
       )}
       {step === 3 && (
         <div style={s.card}>
-          <h3 style={{ margin: "0 0 16px", color: DARK }}>Foto de la remisión</h3>
+          <h3 style={{ margin: "0 0 8px", color: DARK }}>Foto de la remisión <span style={{ color: "#ef4444" }}>*</span></h3>
+          <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 12px" }}>La foto es obligatoria para continuar.</p>
           <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{ display: "none" }} />
-          {!form.foto ? <div onClick={() => fileRef.current.click()} style={{ border: `2px dashed ${BRAND}`, borderRadius: 12, padding: "40px 20px", textAlign: "center", cursor: "pointer", color: BRAND, opacity: .7 }}><div style={{ fontSize: 36, marginBottom: 8 }}>📷</div><div style={{ fontWeight: 600 }}>Toca para tomar foto</div></div>
-            : <div style={{ position: "relative" }}><img src={form.foto} alt="rem" style={{ width: "100%", borderRadius: 10, maxHeight: 220, objectFit: "cover" }} /><button onClick={() => set("foto", null)} style={{ position: "absolute", top: 8, right: 8, background: "#dc2626", color: "#fff", border: "none", borderRadius: 20, padding: "4px 10px", cursor: "pointer", fontSize: 12 }}>Retomar</button></div>}
-          <div style={{ display: "flex", gap: 8, marginTop: 16 }}><button onClick={() => setStep(2)} style={btn("gray")}>← Atrás</button><button disabled={!form.foto} onClick={() => setStep(4)} style={{ ...btn("brand"), opacity: !form.foto ? 0.5 : 1 }}>Siguiente →</button></div>
+          {!form.foto
+            ? <div onClick={() => fileRef.current.click()} style={{ border: `2px dashed #fca5a5`, borderRadius: 12, padding: "40px 20px", textAlign: "center", cursor: "pointer", color: "#ef4444", background: "#fff5f5" }}>
+                <div style={{ fontSize: 36, marginBottom: 8 }}>📷</div>
+                <div style={{ fontWeight: 600 }}>Toca para tomar foto</div>
+                <div style={{ fontSize: 12, marginTop: 4, opacity: .7 }}>Obligatorio</div>
+              </div>
+            : <div style={{ position: "relative" }}>
+                <img src={form.foto} alt="rem" style={{ width: "100%", borderRadius: 10, maxHeight: 220, objectFit: "cover" }} />
+                <button onClick={() => set("foto", null)} style={{ position: "absolute", top: 8, right: 8, background: "#dc2626", color: "#fff", border: "none", borderRadius: 20, padding: "4px 10px", cursor: "pointer", fontSize: 12 }}>Retomar</button>
+              </div>
+          }
+          <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+            <button onClick={() => setStep(2)} style={btn("gray")}>← Atrás</button>
+            <button disabled={!form.foto} onClick={() => setStep(4)} style={{ ...btn("brand"), opacity: !form.foto ? 0.4 : 1 }}>Siguiente →</button>
+          </div>
         </div>
       )}
       {step === 4 && (
         <div style={s.card}>
-          <h3 style={{ margin: "0 0 16px", color: DARK }}>Firma del chofer</h3>
+          <h3 style={{ margin: "0 0 8px", color: DARK }}>Firma del chofer <span style={{ color: "#ef4444" }}>*</span></h3>
+          <p style={{ fontSize: 12, color: "#64748b", margin: "0 0 12px" }}>Firme en el recuadro con el dedo. La firma es obligatoria.</p>
           <SignaturePad onSave={sig => { set("firma", sig); setSigned(true); }} />
-          {signed && <p style={{ color: SUCCESS, fontSize: 13, marginTop: 8, fontWeight: 600 }}>✓ Firma guardada</p>}
+          {signed
+            ? <p style={{ color: SUCCESS, fontSize: 13, marginTop: 8, fontWeight: 600 }}>✓ Firma guardada</p>
+            : <p style={{ color: "#ef4444", fontSize: 12, marginTop: 8 }}>⚠️ Debes guardar tu firma para continuar.</p>
+          }
           <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
             <button onClick={() => setStep(3)} style={btn("gray")}>← Atrás</button>
-            <button disabled={!signed || saving} onClick={handleSave} style={{ ...btn("green"), opacity: (!signed || saving) ? 0.5 : 1 }}>{saving ? "Guardando..." : "✓ Guardar entrega"}</button>
+            <button disabled={!signed || saving} onClick={handleSave} style={{ ...btn("green"), opacity: (!signed || saving) ? 0.4 : 1 }}>{saving ? "Guardando..." : "✓ Guardar entrega"}</button>
           </div>
         </div>
       )}
