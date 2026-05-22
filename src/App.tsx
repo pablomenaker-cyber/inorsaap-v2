@@ -196,8 +196,8 @@ function exportExcel(entregas, fecha) {
 function Login({ onLogin }) {
   const [users, setUsers] = useState([]);
   const [uid, setUid] = useState(""); const [pass, setPass] = useState(""); const [err, setErr] = useState(""); const [loading, setLoading] = useState(true);
-  useEffect(() => { db.get("users", "select=*&order=name").then(d => { setUsers(Array.isArray(d) ? d : []); setLoading(false); }).catch(() => setLoading(false)); }, []);
-  const login = () => { const u = users.find(u => String(u.id) === String(uid)); if (u && u.password === pass) { setErr(""); onLogin(u); } else setErr("Usuario o contraseña incorrectos"); };
+  useEffect(() => { db.get("users", "select=*&order=name").then(d => { setUsers(Array.isArray(d) ? d : []); setLoading(false); }); }, []);
+  const login = () => { const u = users.find(u => u.id === uid); if (u && u.password === pass) { setErr(""); onLogin(u); } else setErr("Usuario o contraseña incorrectos"); };
   return (
     <div style={{ minHeight: "100vh", background: `linear-gradient(135deg,#1a3d5c,${BRAND})`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div style={{ background: "#fff", borderRadius: 20, padding: "36px 28px", width: "100%", maxWidth: 360, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
@@ -475,7 +475,7 @@ function CatalogPanel({ title, icon, table, placeholder, hint }) {
   const [newItem, setNewItem] = useState(""); const [err, setErr] = useState("");
   const [confirmDel, setConfirmDel] = useState(null); const [editing, setEditing] = useState(null); const [editVal, setEditVal] = useState("");
   useEffect(() => { db.get(table, "select=*&order=name").then(d => { setItems(Array.isArray(d) ? d : []); setLoading(false); }); }, [table]);
-  const add = async () => { const v = newItem.trim(); if (!v) { setErr("Escribe un nombre"); return; } if (items.find(i => i.name.toLowerCase() === v.toLowerCase())) { setErr("Ya existe"); return; } const res = await db.post(table, { name: v }); setItems(p => [...p, res[0] || { id, name: v }]); setNewItem(""); setErr(""); };
+  const add = async () => { const v = newItem.trim(); if (!v) { setErr("Escribe un nombre"); return; } if (items.find(i => i.name.toLowerCase() === v.toLowerCase())) { setErr("Ya existe"); return; } const id = table[0] + "_" + Date.now(); const res = await db.post(table, { id, name: v }); setItems(p => [...p, res[0] || { id, name: v }]); setNewItem(""); setErr(""); };
   const saveEdit = async (id) => { const v = editVal.trim(); if (!v) return; await db.patch(table, `id=eq.${id}`, { name: v }); setItems(p => p.map(i => i.id === id ? { ...i, name: v } : i)); setEditing(null); };
   const del = async (id) => { await db.del(table, `id=eq.${id}`); setItems(p => p.filter(i => i.id !== id)); setConfirmDel(null); };
   return (
@@ -622,6 +622,13 @@ function UsersPanel({ users, setUsers, zones }) {
     setUsers(p => [...p, res[0] || body]); setForm({ name: "", password: "", role: "chofer", zone: "" }); setShowForm(false); setErr("");
   };
   const saveZone = async (id) => { await db.patch("users", `id=eq.${id}`, { zone: editZoneVal }); setUsers(p => p.map(u => u.id === id ? { ...u, zone: editZoneVal } : u)); setEditZone(null); };
+  const [editPass, setEditPass] = useState(null); const [newPass, setNewPass] = useState(""); const [passErr, setPassErr] = useState("");
+  const savePass = async (id) => {
+    if (!newPass.trim() || newPass.trim().length < 4) { setPassErr("Mínimo 4 caracteres"); return; }
+    await db.patch("users", `id=eq.${id}`, { password: newPass.trim() });
+    setUsers(p => p.map(u => u.id === id ? { ...u, password: newPass.trim() } : u));
+    setEditPass(null); setNewPass(""); setPassErr("");
+  };
   const delUser = async (id) => { await db.del("users", `id=eq.${id}`); setUsers(p => p.filter(u => u.id !== id)); setConfirmDel(null); };
   return (
     <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 12px" }}>
@@ -658,6 +665,19 @@ function UsersPanel({ users, setUsers, zones }) {
                 : <>{u.zone ? <ZonePill zone={u.zone} zones={zones} /> : <span style={{ fontSize: 12, color: "#94a3b8", fontStyle: "italic" }}>Sin zona</span>}<button onClick={() => { setEditZone(u.id); setEditZoneVal(u.zone || ""); }} style={{ marginLeft: 4, background: "none", border: "1.5px solid #e2e8f0", borderRadius: 8, padding: "4px 10px", cursor: "pointer", color: "#64748b", fontSize: 12 }}>Cambiar</button></>}
             </div>
           )}
+          {/* Cambio de contraseña */}
+          <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 12, color: "#64748b", minWidth: 40 }}>Pass:</span>
+            {editPass === u.id
+              ? <div style={{ display: "flex", gap: 6, flex: 1, alignItems: "center", flexWrap: "wrap" }}>
+                  <input style={{ ...s.input, fontSize: 13, padding: "6px 10px", flex: 1, minWidth: 120 }} type="password" placeholder="Nueva contraseña" value={newPass} onChange={e => { setNewPass(e.target.value); setPassErr(""); }} />
+                  {passErr && <span style={{ fontSize: 11, color: "#dc2626", width: "100%" }}>{passErr}</span>}
+                  <button onClick={() => savePass(u.id)} style={{ ...btn("green"), flex: "none", padding: "6px 12px", fontSize: 12 }}>✓</button>
+                  <button onClick={() => { setEditPass(null); setNewPass(""); setPassErr(""); }} style={{ ...btn("gray"), flex: "none", padding: "6px 12px", fontSize: 12 }}>✕</button>
+                </div>
+              : <><span style={{ fontSize: 12, color: "#94a3b8" }}>••••••</span><button onClick={() => { setEditPass(u.id); setNewPass(""); }} style={{ marginLeft: 4, background: "none", border: "1.5px solid #e2e8f0", borderRadius: 8, padding: "4px 10px", cursor: "pointer", color: "#64748b", fontSize: 12 }}>Cambiar</button></>
+            }
+          </div>
         </div>
       ))}
     </div>
