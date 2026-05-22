@@ -181,9 +181,10 @@ function exportExcel(entregas, fecha) {
     "Zona": e.driver_zone || "—",
     "Unidad": e.unit_placas || "—",
     "Acoplado": e.unit_acoplado || "—",
+    "Folio": e.folio || "—",
     "No. Remisión": e.remision,
     "Producto": e.producto || "—",
-    "Cliente": e.cliente,
+    "Cliente": e.destino,
     "Origen": e.origen,
     "Destino": e.destino,
     "Foto": e.foto_url ? "✓" : "—",
@@ -279,12 +280,22 @@ function DriverHome({ driver, zones, unit, onNew, onLogout }) {
 // ── New Delivery ───────────────────────────────────────────────
 function NewDelivery({ driver, origins, destinations, products, unit, onSave, onCancel }) {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({ origen: "", destino: "", producto: "", remision: "", cliente: "", hora: new Date().toTimeString().slice(0, 5), foto: null, firma: null });
+  const [form, setForm] = useState({ origen: "", destino: "", producto: "", remision: "", folio: "", hora: new Date().toTimeString().slice(0, 5), foto: null, firma: null });
   const [signed, setSigned] = useState(false); const [saving, setSaving] = useState(false);
   const fileRef = useRef(null);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
   const handlePhoto = e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = ev => set("foto", ev.target.result); r.readAsDataURL(f); };
   const steps = ["Ruta", "Datos", "Foto", "Firma"];
+
+  useEffect(() => {
+    db.get("folios", "select=ultimo&id=eq.current").then(d => {
+      if (Array.isArray(d) && d.length > 0) {
+        const next = (d[0].ultimo || 0) + 1;
+        const folio = `IN-26-${String(next).padStart(5, "0")}`;
+        set("folio", folio);
+      }
+    });
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);
@@ -332,10 +343,13 @@ function NewDelivery({ driver, origins, destinations, products, unit, onSave, on
         <div style={s.card}>
           <h3 style={{ margin: "0 0 4px", color: BRAND }}>Datos de la entrega</h3>
           <div style={{ fontSize: 12, color: "#64748b", marginBottom: 14, padding: "6px 10px", background: "#f8fafc", borderRadius: 8 }}>{form.origen} → {form.destino} · {form.producto}</div>
-          <div style={{ marginBottom: 12 }}><label style={s.label}>Número de remisión</label><input style={s.input} placeholder="REM-2024-001" value={form.remision} onChange={e => set("remision", e.target.value)} /></div>
-          <div style={{ marginBottom: 12 }}><label style={s.label}>Cliente final</label><input style={s.input} placeholder="Nombre del cliente" value={form.cliente} onChange={e => set("cliente", e.target.value)} /></div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={s.label}>Folio Inorsapp</label>
+            <div style={{ ...s.input, background: "#f1f5f9", color: BRAND, fontWeight: 700, fontSize: 16, letterSpacing: "1px" }}>{form.folio || "Generando..."}</div>
+          </div>
+          <div style={{ marginBottom: 12 }}><label style={s.label}>Número de remisión</label><input style={s.input} placeholder="Número del banco/mina" value={form.remision} onChange={e => set("remision", e.target.value)} /></div>
           <div style={{ marginBottom: 16 }}><label style={s.label}>Hora de entrega</label><input style={s.input} type="time" value={form.hora} onChange={e => set("hora", e.target.value)} /></div>
-          <div style={{ display: "flex", gap: 8 }}><button onClick={() => setStep(1)} style={btn("gray")}>← Atrás</button><button disabled={!form.remision || !form.cliente} onClick={() => setStep(3)} style={{ ...btn("brand"), opacity: (!form.remision || !form.cliente) ? 0.5 : 1 }}>Siguiente →</button></div>
+          <div style={{ display: "flex", gap: 8 }}><button onClick={() => setStep(1)} style={btn("gray")}>← Atrás</button><button disabled={!form.remision} onClick={() => setStep(3)} style={{ ...btn("brand"), opacity: !form.remision ? 0.5 : 1 }}>Siguiente →</button></div>
         </div>
       )}
       {step === 3 && (
@@ -376,7 +390,7 @@ function DeliveryDetail({ e, zones, onBack }) {
           <span style={{ background: "#dcfce7", color: "#166534", fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "2px 10px" }}>✓ Completado</span>
         </div>
         {e.driver_zone && <div style={{ marginBottom: 10 }}><ZonePill zone={e.driver_zone} zones={zones} /></div>}
-        {[["Chofer", e.driver_name], ["Unidad", e.unit_placas || "—"], ["Acoplado", e.unit_acoplado || "—"], ["Fecha", e.fecha], ["Hora", e.hora], ["Producto", e.producto || "—"], ["Origen", e.origen], ["Destino", e.destino], ["Cliente", e.cliente]].map(([k, v]) => (
+        {[["Folio", e.folio || "—"], ["Chofer", e.driver_name], ["Unidad", e.unit_placas || "—"], ["Acoplado", e.unit_acoplado || "—"], ["Fecha", e.fecha], ["Hora", e.hora], ["Producto", e.producto || "—"], ["Origen", e.origen], ["Destino", e.destino], ["Remisión", e.remision]].map(([k, v]) => (
           <div key={k} style={{ display: "flex", gap: 8, borderBottom: "1px solid #f1f5f9", padding: "7px 0", fontSize: 14 }}>
             <span style={{ color: "#64748b", minWidth: 70 }}>{k}</span>
             <span style={{ color: BRAND, fontWeight: 500 }}>{v}</span>
@@ -458,7 +472,6 @@ function DeliveriesPanel({ zones, users }) {
                 <div style={{ fontSize: 13, color: "#475569" }}>{e.driver_name} · {e.hora}</div>
                 {e.unit_placas && <div style={{ fontSize: 12, color: "#64748b" }}>🚛 {e.unit_placas}{e.unit_acoplado ? " + " + e.unit_acoplado : ""}</div>}
                 <div style={{ fontSize: 13, color: "#475569" }}>{e.origen} → {e.destino}</div>
-                {e.producto && <div style={{ fontSize: 13, color: BRAND }}>📦 {e.producto}</div>}
                 <div style={{ fontSize: 13, color: "#475569" }}>Cliente: {e.cliente}</div>
               </div>
               <div style={{ textAlign: "right", flexShrink: 0 }}>
