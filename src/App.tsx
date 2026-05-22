@@ -413,7 +413,7 @@ function DeliveriesPanel({ zones, users }) {
   const hoy = new Date().toLocaleDateString("es-MX");
   const choferes = users.filter(u => u.role === "chofer");
 
-  useEffect(() => { db.get("entregas", "select=*&order=created_at.desc").then(d => { setEntregas(Array.isArray(d) ? d : []); setLoading(false); }); }, [deliveryView]);, "select=*&order=created_at.desc").then(d => { setEntregas(Array.isArray(d) ? d : []); setLoading(false); }); }, []);
+  useEffect(() => { db.get("entregas", "select=*&order=created_at.desc").then(d => { setEntregas(Array.isArray(d) ? d : []); setLoading(false); }); }, [deliveryView]);
 
   if (sel) return <DeliveryDetail e={sel} zones={zones} onBack={() => setSel(null)} />;
   const filtered = entregas.filter(e => (!filtZone || e.driver_zone === filtZone) && (!filtDriver || e.driver_id === filtDriver) && (!filtDate || e.fecha === filtDate));
