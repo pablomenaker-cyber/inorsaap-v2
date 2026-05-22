@@ -411,11 +411,11 @@ function DeliveriesPanel({ zones, users }) {
   const [filtZone, setFiltZone] = useState(""); const [filtDriver, setFiltDriver] = useState(""); const [filtDate, setFiltDate] = useState("");
   const [excelDate, setExcelDate] = useState("");
   const hoy = new Date().toLocaleDateString("es-MX");
-  const choferes = users.filter(u => u.role === "chofer");
+  const choferes const [confirmDel, setConfirmDel] = useState(null); = users.filter(u => u.role === "chofer");
 
   useEffect(() => { db.get("entregas", "select=*&order=created_at.desc").then(d => { setEntregas(Array.isArray(d) ? d : []); setLoading(false); }); }, []);
 
-  if (sel) return <DeliveryDetail e={sel} zones={zones} onBack={() => setSel(null)} />;
+ if (sel) return <DeliveryDetail e={sel} zones={zones} onBack={() => setSel(null)} onDelete={handleDelete} isAdmin={true} />;
   const filtered = entregas.filter(e => (!filtZone || e.driver_zone === filtZone) && (!filtDriver || e.driver_id === filtDriver) && (!filtDate || e.fecha === filtDate));
   const zoneSummary = zones.reduce((acc, z) => { acc[z] = entregas.filter(e => e.driver_zone === z && e.fecha === hoy).length; return acc; }, {});
 const groupedByDate = filtered.reduce((acc, e) => {
