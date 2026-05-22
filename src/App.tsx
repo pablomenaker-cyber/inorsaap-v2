@@ -196,8 +196,8 @@ function exportExcel(entregas, fecha) {
 function Login({ onLogin }) {
   const [users, setUsers] = useState([]);
   const [uid, setUid] = useState(""); const [pass, setPass] = useState(""); const [err, setErr] = useState(""); const [loading, setLoading] = useState(true);
-  useEffect(() => { db.get("users", "select=*&order=name").then(d => { setUsers(Array.isArray(d) ? d : []); setLoading(false); }).catch(() => setLoading(false)); }, []);
-  const login = () => { const u = users.find(u => String(u.id) === String(uid)); if (u && u.password === pass) { setErr(""); onLogin(u); } else setErr("Usuario o contraseña incorrectos"); };
+  useEffect(() => { db.get("users", "select=*&order=name").then(d => { setUsers(Array.isArray(d) ? d : []); setLoading(false); }); }, []);
+  const login = () => { const u = users.find(u => u.id === uid); if (u && u.password === pass) { setErr(""); onLogin(u); } else setErr("Usuario o contraseña incorrectos"); };
   return (
     <div style={{ minHeight: "100vh", background: `linear-gradient(135deg,#1a3d5c,${BRAND})`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
       <div style={{ background: "#fff", borderRadius: 20, padding: "36px 28px", width: "100%", maxWidth: 360, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" }}>
@@ -549,6 +549,27 @@ function ZonesPanel({ zones, setZones }) {
   );
 }
 
+// ── Unit Form ──────────────────────────────────────────────────
+function UnitForm({ fo, fn, choferes, err, onCancel, onSave, saveLabel }) {
+  return (
+    <div style={{ ...s.card, border: `1.5px solid ${BRAND}`, marginBottom: 16 }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
+        <div style={{ flex: "1 1 45%", minWidth: 120 }}><label style={s.label}>Placas unidad *</label><input style={s.input} placeholder="BJR-1022" value={fo.placas||""} onChange={e => fn("placas", e.target.value)} /></div>
+        <div style={{ flex: "1 1 45%", minWidth: 120 }}><label style={s.label}>Placas acoplado</label><input style={s.input} placeholder="TRE-1234" value={fo.acoplado_placas||""} onChange={e => fn("acoplado_placas", e.target.value)} /></div>
+      </div>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
+        <div style={{ flex: "1 1 45%", minWidth: 120 }}><label style={s.label}>Marca</label><input style={s.input} placeholder="Kenworth" value={fo.marca||""} onChange={e => fn("marca", e.target.value)} /></div>
+        <div style={{ flex: "1 1 45%", minWidth: 120 }}><label style={s.label}>Modelo</label><input style={s.input} placeholder="T800" value={fo.modelo||""} onChange={e => fn("modelo", e.target.value)} /></div>
+        <div style={{ flex: "1 1 45%", minWidth: 120 }}><label style={s.label}>Año</label><input style={s.input} placeholder="2020" value={fo.anio||""} onChange={e => fn("anio", e.target.value)} /></div>
+        <div style={{ flex: "1 1 45%", minWidth: 120 }}><label style={s.label}>Color</label><input style={s.input} placeholder="Blanco" value={fo.color||""} onChange={e => fn("color", e.target.value)} /></div>
+      </div>
+      <div style={{ marginBottom: 14 }}><label style={s.label}>Chofer asignado</label><select style={s.input} value={fo.driver_id||""} onChange={e => fn("driver_id", e.target.value)}><option value="">Sin asignar</option>{choferes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+      {err && <p style={{ color: "#dc2626", fontSize: 13, margin: "0 0 10px" }}>{err}</p>}
+      <div style={{ display: "flex", gap: 8 }}><button onClick={onCancel} style={btn("gray")}>Cancelar</button><button onClick={onSave} style={btn("green")}>{saveLabel}</button></div>
+    </div>
+  );
+}
+
 // ── Units Panel ────────────────────────────────────────────────
 function UnitsPanel({ users }) {
   const [units, setUnits] = useState([]); const [loading, setLoading] = useState(true);
@@ -560,19 +581,28 @@ function UnitsPanel({ users }) {
   const ef = (k, v) => setEditForm(p => ({ ...p, [k]: v }));
   const addUnit = async () => { if (!form.placas.trim()) { setErr("Las placas son requeridas"); return; } const id = "unit_" + Date.now(); const body = { ...form, id, placas: form.placas.trim().toUpperCase(), acoplado_placas: form.acoplado_placas.trim().toUpperCase() }; await db.post("units", body); setUnits(p => [...p, body]); setForm({ placas: "", acoplado_placas: "", marca: "", modelo: "", anio: "", color: "", driver_id: "" }); setShowForm(false); setErr(""); };
   const saveEdit = async (id) => { const body = { ...editForm, placas: editForm.placas.trim().toUpperCase(), acoplado_placas: editForm.acoplado_placas.trim().toUpperCase() }; await db.patch("units", `id=eq.${id}`, body); setUnits(p => p.map(u => u.id === id ? body : u)); setEditing(null); };
-  const iRow = (lbl, key, ph, fo, fn) => <div style={{ flex: "1 1 45%", minWidth: 120 }}><label style={s.label}>{lbl}</label><input style={s.input} placeholder={ph} value={fo[key]} onChange={e => fn(key, e.target.value)} /></div>;
+  const iRow = (lbl, key, ph, fo, fn) => <div style={{ flex: "1 1 45%", minWidth: 120 }}><label style={s.label}>{lbl}</label><input style={s.input} placeholder={ph} value={fo[key]||""} onChange={e => fn(key, e.target.value)} /></div>;
+  const UForm = ({ fo, fn, onCancel, onSave, saveLabel }) => (
+    <div style={{ ...s.card, border: `1.5px solid ${BRAND}`, marginBottom: 16 }}>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>{iRow("Placas unidad *","placas","BJR-1022",fo,fn)}{iRow("Placas acoplado","acoplado_placas","TRE-1234",fo,fn)}</div>
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>{iRow("Marca","marca","Kenworth",fo,fn)}{iRow("Modelo","modelo","T800",fo,fn)}{iRow("Año","anio","2020",fo,fn)}{iRow("Color","color","Blanco",fo,fn)}</div>
+      <div style={{ marginBottom: 14 }}><label style={s.label}>Chofer asignado</label><select style={s.input} value={fo.driver_id} onChange={e => fn("driver_id", e.target.value)}><option value="">Sin asignar</option>{choferes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+      {err && <p style={{ color: "#dc2626", fontSize: 13, margin: "0 0 10px" }}>{err}</p>}
+      <div style={{ display: "flex", gap: 8 }}><button onClick={onCancel} style={btn("gray")}>Cancelar</button><button onClick={onSave} style={btn("green")}>{saveLabel}</button></div>
+    </div>
+  );
   return (
     <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 12px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
         <h3 style={{ margin: 0, color: BRAND, fontSize: 17 }}>Unidades y acoplados</h3>
         <button onClick={() => setShowForm(!showForm)} style={{ ...btn("brand"), flex: "none", padding: "8px 16px", fontSize: 13 }}>{showForm ? "Cancelar" : "+ Nueva unidad"}</button>
       </div>
-      {showForm && <UForm fo={form} fn={f} onCancel={() => { setShowForm(false); setErr(""); }} onSave={addUnit} saveLabel="✓ Registrar" />}
+      {showForm && <UnitForm fo={form} fn={f} choferes={choferes} err={err} onCancel={() => { setShowForm(false); setErr(""); }} onSave={addUnit} saveLabel="✓ Registrar" />}
       {loading ? <Spinner /> : units.length === 0 ? <div style={{ ...s.card, textAlign: "center", color: "#94a3b8", fontSize: 14 }}>No hay unidades registradas</div>
         : units.map(unit => {
           const chofer = choferes.find(c => c.id === unit.driver_id);
           return editing === unit.id && editForm
-            ? <UForm key={unit.id} fo={editForm} fn={ef} onCancel={() => { setEditing(null); setEditForm(null); }} onSave={() => saveEdit(unit.id)} saveLabel="✓ Guardar cambios" />
+            ? <UnitForm key={unit.id} fo={editForm} fn={ef} choferes={choferes} err={err} onCancel={() => { setEditing(null); setEditForm(null); }} onSave={() => saveEdit(unit.id)} saveLabel="✓ Guardar cambios" />
             : (
               <div key={unit.id} style={s.card}>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
