@@ -418,7 +418,16 @@ function DeliveriesPanel({ zones, users }) {
   if (sel) return <DeliveryDetail e={sel} zones={zones} onBack={() => setSel(null)} />;
   const filtered = entregas.filter(e => (!filtZone || e.driver_zone === filtZone) && (!filtDriver || e.driver_id === filtDriver) && (!filtDate || e.fecha === filtDate));
   const zoneSummary = zones.reduce((acc, z) => { acc[z] = entregas.filter(e => e.driver_zone === z && e.fecha === hoy).length; return acc; }, {});
-
+const groupedByDate = filtered.reduce((acc, e) => {
+    const fecha = e.fecha || "Sin fecha";
+    if (!acc[fecha]) acc[fecha] = [];
+    acc[fecha].push(e);
+    return acc;
+  }, {});
+  const sortedDates = Object.keys(groupedByDate).sort((a, b) => {
+    const parse = d => { const [dd,mm,yyyy] = d.split("/"); return new Date(`${yyyy}-${mm}-${dd}`); };
+    return parse(b) - parse(a);
+  });
   return (
     <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 12px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
