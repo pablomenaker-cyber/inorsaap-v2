@@ -413,6 +413,11 @@ function DeliveriesPanel({ zones, users }) {
   const hoy = new Date().toLocaleDateString("es-MX");
   const choferes = users.filter(u => u.role === "chofer");
   const [confirmDel, setConfirmDel] = useState(null);
+  const handleDelete = async (id) => {
+    await db.del("entregas", `id=eq.${id}`);
+    setEntregas(p => p.filter(e => e.id !== id));
+    setConfirmDel(null);
+  };
 
   useEffect(() => { db.get("entregas", "select=*&order=created_at.desc").then(d => { setEntregas(Array.isArray(d) ? d : []); setLoading(false); }); }, []);
 
