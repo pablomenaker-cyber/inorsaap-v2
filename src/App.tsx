@@ -178,6 +178,7 @@ function exportExcel(entregas, fecha) {
     "Unidad": e.unit_placas || "—",
     "Acoplado": e.unit_acoplado || "—",
     "No. Remisión": e.remision,
+    "Producto": e.producto || "—",
     "Cliente": e.cliente,
     "Origen": e.origen,
     "Destino": e.destino,
@@ -272,9 +273,9 @@ function DriverHome({ driver, zones, unit, onNew, onLogout }) {
 }
 
 // ── New Delivery ───────────────────────────────────────────────
-function NewDelivery({ driver, origins, destinations, unit, onSave, onCancel }) {
+function NewDelivery({ driver, origins, destinations, products, unit, onSave, onCancel }) {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({ origen: "", destino: "", remision: "", cliente: "", hora: new Date().toTimeString().slice(0, 5), foto: null, firma: null });
+  const [form, setForm] = useState({ origen: "", destino: "", producto: "", remision: "", cliente: "", hora: new Date().toTimeString().slice(0, 5), foto: null, firma: null });
   const [signed, setSigned] = useState(false); const [saving, setSaving] = useState(false);
   const fileRef = useRef(null);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -288,7 +289,7 @@ function NewDelivery({ driver, origins, destinations, unit, onSave, onCancel }) 
       let foto_url = null, firma_url = null;
       if (form.foto) foto_url = await db.upload("inorsapp", `fotos/${driver.id}_${ts}.jpg`, form.foto, "image/jpeg");
       if (form.firma) firma_url = await db.upload("inorsapp", `firmas/${driver.id}_${ts}.png`, form.firma, "image/png");
-    const entrega = { driver_id: String(driver.id), driver_name: driver.name, driver_zone: driver.zone || "", unit_placas: unit?.placas || "", unit_acoplado: unit?.acoplado_placas || "", remision: form.remision, cliente: form.cliente, origen: form.origen, destino: form.destino, hora: form.hora, fecha: new Date().toLocaleDateString("es-MX"), foto_url, firma_url };
+          const entrega = { driver_id: String(driver.id), driver_name: driver.name, driver_zone: driver.zone || "", unit_placas: unit?.placas || "", unit_acoplado: unit?.acoplado_placas || "", remision: form.remision, cliente: form.cliente, origen: form.origen, destino: form.destino, producto: form.producto, hora: form.hora, fecha: new Date().toLocaleDateString("es-MX"), foto_url, firma_url };
       await db.post("entregas", entrega);
       await db.post("notificaciones", {
         titulo: `Nueva entrega — ${driver.name}`,
@@ -326,7 +327,7 @@ function NewDelivery({ driver, origins, destinations, unit, onSave, onCancel }) 
       {step === 2 && (
         <div style={s.card}>
           <h3 style={{ margin: "0 0 4px", color: BRAND }}>Datos de la entrega</h3>
-          <div style={{ fontSize: 12, color: "#64748b", marginBottom: 14, padding: "6px 10px", background: "#f8fafc", borderRadius: 8 }}>{form.origen} → {form.destino}</div>
+          <div style={{ fontSize: 12, color: "#64748b", marginBottom: 14, padding: "6px 10px", background: "#f8fafc", borderRadius: 8 }}>{form.origen} → {form.destino} · {form.producto}</div>
           <div style={{ marginBottom: 12 }}><label style={s.label}>Número de remisión</label><input style={s.input} placeholder="REM-2024-001" value={form.remision} onChange={e => set("remision", e.target.value)} /></div>
           <div style={{ marginBottom: 12 }}><label style={s.label}>Cliente final</label><input style={s.input} placeholder="Nombre del cliente" value={form.cliente} onChange={e => set("cliente", e.target.value)} /></div>
           <div style={{ marginBottom: 16 }}><label style={s.label}>Hora de entrega</label><input style={s.input} type="time" value={form.hora} onChange={e => set("hora", e.target.value)} /></div>
@@ -371,7 +372,7 @@ function DeliveryDetail({ e, zones, onBack }) {
           <span style={{ background: "#dcfce7", color: "#166534", fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "2px 10px" }}>✓ Completado</span>
         </div>
         {e.driver_zone && <div style={{ marginBottom: 10 }}><ZonePill zone={e.driver_zone} zones={zones} /></div>}
-        {[["Chofer", e.driver_name], ["Unidad", e.unit_placas || "—"], ["Acoplado", e.unit_acoplado || "—"], ["Fecha", e.fecha], ["Hora", e.hora], ["Origen", e.origen], ["Destino", e.destino], ["Cliente", e.cliente]].map(([k, v]) => (
+        {[["Chofer", e.driver_name], ["Unidad", e.unit_placas || "—"], ["Acoplado", e.unit_acoplado || "—"], ["Fecha", e.fecha], ["Hora", e.hora], ["Producto", e.producto || "—"], ["Origen", e.origen], ["Destino", e.destino], ["Cliente", e.cliente]].map(([k, v]) => (
           <div key={k} style={{ display: "flex", gap: 8, borderBottom: "1px solid #f1f5f9", padding: "7px 0", fontSize: 14 }}>
             <span style={{ color: "#64748b", minWidth: 70 }}>{k}</span>
             <span style={{ color: BRAND, fontWeight: 500 }}>{v}</span>
@@ -508,17 +509,18 @@ function CatalogPanel({ title, icon, table, placeholder, hint }) {
   );
 }
 
-function CatalogsPanel() {
+function CatalogsPanel({ products, setProducts }) {
   const [sub, setSub] = useState("origins");
   return (
     <div style={{ maxWidth: 700, margin: "0 auto", padding: "16px 12px" }}>
       <div style={{ display: "flex", gap: 0, marginBottom: 18, background: "#f1f5f9", borderRadius: 10, padding: 4 }}>
-        {[["origins", "⛏️ Orígenes"], ["destinations", "🏁 Destinos"]].map(([k, l]) => (
-          <button key={k} onClick={() => setSub(k)} style={{ flex: 1, padding: "8px 0", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: sub === k ? 700 : 400, background: sub === k ? "#fff" : "transparent", color: sub === k ? BRAND : "#64748b", fontSize: 14 }}>{l}</button>
+        {[["origins", "⛏️ Orígenes"], ["destinations", "🏁 Destinos"], ["products", "📦 Productos"]].map(([k, l]) => (
+          <button key={k} onClick={() => setSub(k)} style={{ flex: 1, padding: "8px 0", border: "none", borderRadius: 8, cursor: "pointer", fontWeight: sub === k ? 700 : 400, background: sub === k ? "#fff" : "transparent", color: sub === k ? BRAND : "#64748b", fontSize: 13 }}>{l}</button>
         ))}
       </div>
       {sub === "origins" ? <CatalogPanel title="Orígenes" icon="⛏️" table="origins" placeholder="Ej. Mina La Esperanza" hint="Los choferes seleccionarán desde esta lista." />
-        : <CatalogPanel title="Destinos" icon="🏁" table="destinations" placeholder="Ej. Ferretera El Sol" hint="Los choferes seleccionarán desde esta lista." />}
+        : sub === "destinations" ? <CatalogPanel title="Destinos" icon="🏁" table="destinations" placeholder="Ej. Ferretera El Sol" hint="Los choferes seleccionarán desde esta lista." />
+        : <CatalogPanel title="Productos" icon="📦" table="products" placeholder="Ej. Grava 3/4" hint="Los choferes seleccionarán el producto que transportan." />}
     </div>
   );
 }
@@ -706,7 +708,7 @@ function UsersPanel({ users, setUsers, zones }) {
 }
 
 // ── Backoffice Shell ───────────────────────────────────────────
-function BackofficeShell({ user, users, setUsers, zones, setZones, onLogout }) {
+function BackofficeShell({ user, users, setUsers, zones, setZones, products, setProducts, onLogout }) {
   const [tab, setTab] = useState("entregas");
   const tabs = user.role === "admin"
     ? [["entregas","📦 Entregas"],["unidades","🚛 Unidades"],["usuarios","👥 Usuarios"],["zonas","📍 Zonas"],["catalogos","🗂️ Catálogos"]]
@@ -732,7 +734,7 @@ function BackofficeShell({ user, users, setUsers, zones, setZones, onLogout }) {
         {tab === "unidades" && user.role === "admin" && <UnitsPanel users={users} />}
         {tab === "usuarios" && user.role === "admin" && <UsersPanel users={users} setUsers={setUsers} zones={zones} />}
         {tab === "zonas" && user.role === "admin" && <ZonesPanel zones={zones} setZones={setZones} />}
-        {tab === "catalogos" && user.role === "admin" && <CatalogsPanel />}
+        {tab === "catalogos" && user.role === "admin" && <CatalogsPanel products={products} setProducts={setProducts} />}
       </div>
     </div>
   );
@@ -746,6 +748,7 @@ export default function App() {
   const [units, setUnits] = useState([]);
   const [origins, setOrigins] = useState([]);
   const [destinations, setDestinations] = useState([]);
+  const [products, setProducts] = useState([]);
   const [view, setView] = useState("home");
   const [appReady, setAppReady] = useState(false);
 
@@ -756,7 +759,8 @@ export default function App() {
       db.get("units", "select=*&order=placas"),
       db.get("origins", "select=*&order=name"),
       db.get("destinations", "select=*&order=name"),
-    ]).then(([u, z, un, o, d]) => {
+      db.get("products", "select=*&order=name"),
+    ]).then(([u, z, un, o, d, pr]) => {
       console.log("users:", u);
       console.log("zones:", z);
       setUsers(Array.isArray(u) ? u : []);
@@ -764,6 +768,7 @@ export default function App() {
       setUnits(Array.isArray(un) ? un : []);
       setOrigins(Array.isArray(o) ? o : []);
       setDestinations(Array.isArray(d) ? d : []);
+      setProducts(Array.isArray(pr) ? pr : []);
       setAppReady(true);
     }).catch(err => {
       console.error("Error cargando datos:", err);
@@ -782,10 +787,10 @@ export default function App() {
 
   if (session.role === "chofer") {
     const fresh = users.find(u => u.id === session.id) || session;
-    const unit = units.find(u => u.driver_id === fresh.id) || null;
-    if (view === "new") return <NewDelivery driver={fresh} origins={origins} destinations={destinations} unit={unit} onSave={() => setView("home")} onCancel={() => setView("home")} />;
+    const unit = units.find(u => String(u.driver_id) === String(fresh.id)) || null;
+    if (view === "new") return <NewDelivery driver={fresh} origins={origins} destinations={destinations} products={products} unit={unit} onSave={() => setView("home")} onCancel={() => setView("home")} />;
     return <DriverHome driver={fresh} zones={zones} unit={unit} onNew={() => setView("new")} onLogout={() => setSession(null)} />;
   }
 
-  return <BackofficeShell user={session} users={users} setUsers={setUsers} zones={zones} setZones={setZones} onLogout={() => setSession(null)} />;
+  return <BackofficeShell user={session} users={users} setUsers={setUsers} zones={zones} setZones={setZones} products={products} setProducts={setProducts} onLogout={() => setSession(null)} />;
 }
