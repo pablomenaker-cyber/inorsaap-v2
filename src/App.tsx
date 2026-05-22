@@ -321,7 +321,8 @@ function NewDelivery({ driver, origins, destinations, products, unit, onSave, on
           <h3 style={{ margin: "0 0 16px", color: BRAND }}>¿De dónde a dónde?</h3>
           <div style={{ marginBottom: 14 }}><label style={s.label}>⛏️ Origen</label><select style={s.input} value={form.origen} onChange={e => set("origen", e.target.value)}><option value="">Seleccionar...</option>{origins.map(o => <option key={o.id} value={o.name}>{o.name}</option>)}</select></div>
           <div style={{ marginBottom: 18 }}><label style={s.label}>🏁 Destino</label><select style={s.input} value={form.destino} onChange={e => set("destino", e.target.value)}><option value="">Seleccionar...</option>{destinations.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}</select></div>
-          <button disabled={!form.origen || !form.destino} onClick={() => setStep(2)} style={{ ...btn("brand"), width: "100%", opacity: (!form.origen || !form.destino) ? 0.5 : 1 }}>Siguiente →</button>
+          <div style={{ marginBottom: 18 }}><label style={s.label}>📦 Producto</label><select style={s.input} value={form.producto} onChange={e => set("producto", e.target.value)}><option value="">Seleccionar producto...</option>{products.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}</select></div>
+          <button disabled={!form.origen || !form.destino || !form.producto} onClick={() => setStep(2)} style={{ ...btn("brand"), width: "100%", opacity: (!form.origen || !form.destino || !form.producto) ? 0.5 : 1 }}>Siguiente →</button>
         </div>
       )}
       {step === 2 && (
