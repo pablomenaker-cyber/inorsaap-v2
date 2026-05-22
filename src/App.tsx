@@ -729,9 +729,15 @@ function UsersPanel({ users, setUsers, zones }) {
 // ── Backoffice Shell ───────────────────────────────────────────
 function BackofficeShell({ user, users, setUsers, zones, setZones, products, setProducts, onLogout }) {
   const [tab, setTab] = useState("entregas");
+  const [deliveryView, setDeliveryView] = useState("list");
   const tabs = user.role === "admin"
     ? [["entregas","📦 Entregas"],["unidades","🚛 Unidades"],["usuarios","👥 Usuarios"],["zonas","📍 Zonas"],["catalogos","🗂️ Catálogos"]]
     : [["entregas","📦 Entregas"]];
+
+  const handleTabClick = (key) => {
+    setTab(key);
+    if (key === "entregas") setDeliveryView("list");
+  };
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc" }}>
       <div style={{ background: DARK, padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -745,11 +751,11 @@ function BackofficeShell({ user, users, setUsers, zones, setZones, products, set
       </div>
       <div style={{ background: "#fff", borderBottom: "1px solid #f1f5f9", display: "flex", overflowX: "auto" }}>
         {tabs.map(([key, label]) => (
-          <button key={key} onClick={() => setTab(key)} style={{ padding: "13px 16px", border: "none", background: "none", cursor: "pointer", fontWeight: tab === key ? 700 : 400, color: tab === key ? BRAND : "#94a3b8", borderBottom: tab === key ? `2px solid ${BRAND}` : "2px solid transparent", fontSize: 13, whiteSpace: "nowrap", transition: "color 0.2s" }}>{label}</button>
+          <button key={key} onClick={() => handleTabClick(key)} style={{ padding: "13px 16px", border: "none", background: "none", cursor: "pointer", fontWeight: tab === key ? 700 : 400, color: tab === key ? BRAND : "#94a3b8", borderBottom: tab === key ? `2px solid ${BRAND}` : "2px solid transparent", fontSize: 13, whiteSpace: "nowrap", transition: "color 0.2s" }}>{label}</button>
         ))}
       </div>
       <div>
-        {tab === "entregas" && <DeliveriesPanel zones={zones} users={users} />}
+        {tab === "entregas" && <DeliveriesPanel zones={zones} users={users} deliveryView={deliveryView} setDeliveryView={setDeliveryView} />}
         {tab === "unidades" && user.role === "admin" && <UnitsPanel users={users} />}
         {tab === "usuarios" && user.role === "admin" && <UsersPanel users={users} setUsers={setUsers} zones={zones} />}
         {tab === "zonas" && user.role === "admin" && <ZonesPanel zones={zones} setZones={setZones} />}
