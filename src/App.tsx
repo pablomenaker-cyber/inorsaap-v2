@@ -196,7 +196,7 @@ function exportExcel(entregas, fecha) {
 function Login({ onLogin }) {
   const [users, setUsers] = useState([]);
   const [uid, setUid] = useState(""); const [pass, setPass] = useState(""); const [err, setErr] = useState(""); const [loading, setLoading] = useState(true);
-  useEffect(() => { db.get("users", "select=*&order=name").then(d => { setUsers(Array.isArray(d) ? d : []); setLoading(false); }); }, []);
+  useEffect(() => { db.get("users", "select=*&order=name").then(d => { setUsers(Array.isArray(d) ? d : []); setLoading(false); }).catch(() => setLoading(false)); }, []);
   const login = () => { const u = users.find(u => u.id === uid); if (u && u.password === pass) { setErr(""); onLogin(u); } else setErr("Usuario o contraseña incorrectos"); };
   return (
     <div style={{ minHeight: "100vh", background: `linear-gradient(135deg,#1a3d5c,${BRAND})`, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
