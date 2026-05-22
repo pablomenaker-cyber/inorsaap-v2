@@ -475,7 +475,7 @@ function CatalogPanel({ title, icon, table, placeholder, hint }) {
   const [newItem, setNewItem] = useState(""); const [err, setErr] = useState("");
   const [confirmDel, setConfirmDel] = useState(null); const [editing, setEditing] = useState(null); const [editVal, setEditVal] = useState("");
   useEffect(() => { db.get(table, "select=*&order=name").then(d => { setItems(Array.isArray(d) ? d : []); setLoading(false); }); }, [table]);
-  const add = async () => { const v = newItem.trim(); if (!v) { setErr("Escribe un nombre"); return; } if (items.find(i => i.name.toLowerCase() === v.toLowerCase())) { setErr("Ya existe"); return; } const id = table[0] + "_" + Date.now(); const res = await db.post(table, { id, name: v }); setItems(p => [...p, res[0] || { id, name: v }]); setNewItem(""); setErr(""); };
+  const add = async () => { const v = newItem.trim(); if (!v) { setErr("Escribe un nombre"); return; } if (items.find(i => i.name.toLowerCase() === v.toLowerCase())) { setErr("Ya existe"); return; } const res = await db.post(table, { name: v }); setItems(p => [...p, res[0] || { id, name: v }]); setNewItem(""); setErr(""); };
   const saveEdit = async (id) => { const v = editVal.trim(); if (!v) return; await db.patch(table, `id=eq.${id}`, { name: v }); setItems(p => p.map(i => i.id === id ? { ...i, name: v } : i)); setEditing(null); };
   const del = async (id) => { await db.del(table, `id=eq.${id}`); setItems(p => p.filter(i => i.id !== id)); setConfirmDel(null); };
   return (
