@@ -288,12 +288,13 @@ function NewDelivery({ driver, origins, destinations, products, unit, onSave, on
   const steps = ["Ruta", "Datos", "Foto", "Firma"];
 
   useEffect(() => {
-    db.get("folios", "select=ultimo&id=eq.current").then(d => {
-      if (Array.isArray(d) && d.length > 0) {
-        const next = (d[0].ultimo || 0) + 1;
-        const folio = `IN-26-${String(next).padStart(5, "0")}`;
-        set("folio", folio);
-      }
+    fetch(`${SUPA_URL}/rest/v1/rpc/get_next_folio`, {
+      method: "POST",
+      headers: { ...HEADERS, "Content-Type": "application/json" },
+      body: JSON.stringify({})
+    }).then(r => r.json()).then(num => {
+      const folio = `IN-26-${String(num).padStart(5, "0")}`;
+      set("folio", folio);
     });
   }, []);
 
